@@ -1582,6 +1582,7 @@ The theatre rests. The players breathe. Somewhere, a child is being born into a 
 function showEnvSelect() {
   document.getElementById('title-screen').style.display = 'none';
   document.getElementById('env-screen').classList.remove('hidden');
+  startMusic(); // called directly inside a gesture handler — iOS requires this
 }
 
 function selectEnv(envKey) {
@@ -1592,17 +1593,29 @@ function selectEnv(envKey) {
   document.getElementById('trait-panel').classList.remove('hidden');
   document.getElementById('game-scene').classList.remove('hidden');
   window.scrollTo({ top: 0 });
-  startMusic();
   renderStage(0);
 }
 
 // ── MUSIC ────────────────────────────────────────────────────
 let musicMuted = false;
+let musicStarted = false;
 function startMusic() {
+  if (musicStarted) return;
   const audio = document.getElementById('bg-music');
   if (!audio) return;
   audio.volume = 0.45;
-  audio.play().catch(() => {}); // autoplay policy: silently ignore if blocked
+  audio.play().then(() => {
+    musicStarted = true;
+  }).catch(() => {
+    // iOS blocked it despite gesture — retry on next touch
+    const retry = () => {
+      audio.play().then(() => { musicStarted = true; }).catch(() => {});
+      document.removeEventListener('touchstart', retry);
+      document.removeEventListener('click', retry);
+    };
+    document.addEventListener('touchstart', retry, { once: true });
+    document.addEventListener('click', retry, { once: true });
+  });
 }
 function toggleMute() {
   const audio = document.getElementById('bg-music');
