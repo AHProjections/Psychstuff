@@ -1,0 +1,2257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Inner Theatre — A Psychoanalytic Journey</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=IM+Fell+English:ital@0;1&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1018;
+    --parchment: #f0e8d8;
+    --aged: #c8b89a;
+    --deep-violet: #2d1b4e;
+    --violet: #4a2d7a;
+    --crimson: #8b1a2e;
+    --gold: #b8902a;
+    --teal: #1a5c5c;
+    --env-color: #b8902a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--ink);
+    color: var(--parchment);
+    font-family: 'IM Fell English', serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    overflow-y: auto;
+    overflow-x: hidden;
+    position: relative;
+    padding: 32px 16px 80px;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 15% 50%, rgba(45,27,78,0.35) 0%, transparent 55%),
+      radial-gradient(ellipse at 85% 20%, rgba(139,26,46,0.18) 0%, transparent 45%),
+      radial-gradient(ellipse at 55% 85%, rgba(74,45,122,0.25) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+    opacity: 0.35;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  #game-container {
+    position: relative;
+    z-index: 2;
+    width: min(720px, 96vw);
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  /* ── HEADER ── */
+  .header-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(184,144,42,0.25);
+    padding-bottom: 10px;
+    margin-bottom: 22px;
+  }
+  .game-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--gold);
+    opacity: 0.65;
+  }
+  .stage-indicator {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.75rem;
+    letter-spacing: 0.18em;
+    color: var(--aged);
+    font-style: italic;
+  }
+
+  /* ── TRAIT BAR ── */
+  #trait-panel {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+  .trait-chip {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    padding: 3px 10px;
+    border: 1px solid rgba(184,144,42,0.35);
+    color: var(--aged);
+    font-style: italic;
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity 0.5s, transform 0.5s;
+  }
+  .trait-chip.visible { opacity: 1; transform: translateY(0); }
+  .trait-chip.highlight { border-color: var(--gold); color: var(--gold); }
+
+  /* ── SCENE BOX ── */
+  .scene-box {
+    border: 1px solid rgba(184,144,42,0.22);
+    background: rgba(20,12,22,0.65);
+    padding: 34px 38px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .scene-box::before {
+    content: '❧';
+    position: absolute;
+    top: 9px; left: 14px;
+    color: var(--gold);
+    opacity: 0.35;
+    font-size: 1.1rem;
+  }
+  .scene-box::after {
+    content: '❧';
+    position: absolute;
+    bottom: 9px; right: 14px;
+    color: var(--gold);
+    opacity: 0.35;
+    font-size: 1.1rem;
+    transform: rotate(180deg);
+  }
+
+  .age-label {
+    font-family: 'Playfair Display', serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.42em;
+    text-transform: uppercase;
+    color: var(--gold);
+    opacity: 0.75;
+  }
+  .scene-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.55rem;
+    line-height: 1.25;
+    color: var(--parchment);
+    font-weight: 400;
+  }
+  .scene-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.12rem;
+    line-height: 1.88;
+    color: rgba(240,232,216,0.87);
+    font-weight: 300;
+  }
+  .scene-text em { color: var(--aged); font-style: italic; }
+  .scene-text strong { color: var(--parchment); font-weight: 400; }
+
+  /* Echo box — shows earlier pattern repeating */
+  .echo-box {
+    border-left: 2px solid var(--gold);
+    padding: 10px 18px;
+    background: rgba(184,144,42,0.06);
+    margin: 4px 0;
+  }
+  .echo-label {
+    font-family: 'Playfair Display', serif;
+    font-size: 0.58rem;
+    letter-spacing: 0.38em;
+    text-transform: uppercase;
+    color: var(--gold);
+    opacity: 0.8;
+    margin-bottom: 5px;
+  }
+  .echo-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.98rem;
+    line-height: 1.68;
+    color: rgba(200,184,154,0.85);
+    font-style: italic;
+    font-weight: 300;
+  }
+
+  /* Insight box — expandable psychoanalytic note */
+  .insight-box {
+    border-left: 2px solid rgba(139,26,46,0.55);
+    background: rgba(139,26,46,0.09);
+    border-radius: 1px;
+    padding: 0;
+  }
+  .insight-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+    gap: 10px;
+  }
+  .insight-summary::-webkit-details-marker { display: none; }
+  .insight-summary::marker { display: none; }
+  .insight-summary:hover { background: rgba(139,26,46,0.08); }
+  .insight-label {
+    font-family: 'Playfair Display', serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: rgba(185,70,70,0.95);
+    font-weight: 400;
+  }
+  .insight-caret {
+    font-size: 0.52rem;
+    color: rgba(139,26,46,0.65);
+    transition: transform 0.22s;
+    flex-shrink: 0;
+  }
+  details.insight-box[open] .insight-caret { transform: rotate(90deg); }
+  .insight-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1rem;
+    line-height: 1.72;
+    color: rgba(222,208,178,0.94);
+    font-style: italic;
+    font-weight: 300;
+    padding: 10px 16px 14px 16px;
+    border-top: 1px solid rgba(139,26,46,0.18);
+  }
+
+  /* Choices */
+  .choices-area {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    margin-top: 6px;
+  }
+  .choice-btn {
+    background: none;
+    border: 1px solid rgba(184,144,42,0.28);
+    color: var(--parchment);
+    font-family: 'IM Fell English', serif;
+    font-size: 0.98rem;
+    padding: 13px 22px;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    line-height: 1.5;
+    position: relative;
+  }
+  .choice-btn::before { content: '◦  '; color: var(--gold); opacity: 0.55; transition: opacity 0.18s; }
+  .choice-btn:hover { border-color: rgba(184,144,42,0.65); background: rgba(184,144,42,0.06); padding-left: 28px; }
+  .choice-btn:hover::before { opacity: 1; content: '◈  '; }
+  .choice-btn.selected { border-color: var(--violet); background: rgba(74,45,122,0.13); pointer-events: none; }
+  .choice-btn.post-faded { opacity: 0.25; pointer-events: none; }
+  /* groove-dominant: the grooved path feels like home */
+  .choice-btn.groove-dominant { border-color: rgba(184,144,42,0.5); background: rgba(184,144,42,0.06); }
+  .choice-btn.groove-dominant::before { content: '◦  '; opacity: 0.85; color: var(--gold); }
+
+  /* groove-flicker: against the grain — slight resistance, still reachable */
+  @keyframes grooveFlicker {
+    0%, 100% { opacity: 0.72; }
+    38%  { opacity: 0.5; }
+    72%  { opacity: 0.65; }
+  }
+  .choice-btn.groove-flicker {
+    opacity: 0.7; color: rgba(240,232,216,0.72); border-color: rgba(184,144,42,0.16);
+    font-style: italic; animation: grooveFlicker 3.4s ease-in-out infinite;
+  }
+  .choice-btn.groove-flicker::before { content: '·  '; opacity: 0.3; }
+  .choice-btn.groove-flicker:hover { opacity: 0.92; animation-play-state: paused; }
+
+  /* groove-scramble: harder to reach — text feels unstable, still clickable */
+  .choice-btn.groove-scramble {
+    opacity: 0.44; color: rgba(240,232,216,0.5); border-color: rgba(184,144,42,0.1);
+    border-style: dashed; font-style: italic; filter: blur(0.32px);
+    transition: filter 0.2s, opacity 0.2s;
+  }
+  .choice-btn.groove-scramble::before { content: '  '; }
+  .choice-btn.groove-scramble:hover { opacity: 0.68; filter: blur(0px); }
+
+  /* groove-burn: the path has calcified — burns away to ghost text */
+  .choice-btn.groove-burn {
+    opacity: 0.32; color: rgba(240,232,216,0.35); border-color: rgba(184,144,42,0.06);
+    border-style: dashed; font-style: italic; pointer-events: none; cursor: default; user-select: none;
+  }
+  .choice-btn.groove-burn::before { content: '  '; }
+  @keyframes burnAway {
+    0%   { opacity: 0.32; filter: blur(0px); letter-spacing: normal; color: rgba(240,200,140,0.38); }
+    22%  { opacity: 0.5;  filter: blur(0px); color: rgba(200,80,18,0.52); }
+    55%  { opacity: 0.26; filter: blur(0.9px); letter-spacing: 0.05em; color: rgba(155,38,8,0.28); }
+    82%  { opacity: 0.1;  filter: blur(2.4px); letter-spacing: 0.12em; }
+    100% { opacity: 0;    filter: blur(5px);   letter-spacing: 0.2em; }
+  }
+  .choice-btn.groove-burning { animation: burnAway 1.7s ease-in forwards; pointer-events: none; }
+  /* ghost text that replaces a burned choice */
+  @keyframes ghostFadeIn {
+    from { opacity: 0; transform: translateY(-3px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .groove-ghost {
+    font-family: 'Cormorant Garamond', serif; font-size: 0.8rem;
+    color: rgba(139,26,46,0.32); font-style: italic;
+    padding: 5px 8px 5px 14px; border-left: 1px solid rgba(139,26,46,0.14);
+    margin: 2px 0; opacity: 0; animation: ghostFadeIn 0.7s ease-out 1.5s forwards;
+  }
+
+  /* mute button in header */
+  .mute-btn {
+    background: none; border: 1px solid rgba(184,144,42,0.28); color: rgba(184,144,42,0.65);
+    font-size: 0.7rem; letter-spacing: 0.12em; padding: 3px 9px; cursor: pointer;
+    font-family: 'Cormorant Garamond', serif; transition: border-color 0.2s, color 0.2s;
+    border-radius: 2px;
+  }
+  .mute-btn:hover { border-color: rgba(184,144,42,0.6); color: rgba(184,144,42,0.9); }
+  /* resistance hint above an against-grain choice */
+  .against-grain-note {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.76rem;
+    color: rgba(139,26,46,0.65);
+    font-style: italic;
+    padding-left: 6px;
+    margin-bottom: -4px;
+  }
+
+  /* Outcome / echo after choice */
+  .outcome-text {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.05rem;
+    line-height: 1.72;
+    color: var(--aged);
+    font-style: italic;
+    border-top: 1px solid rgba(184,144,42,0.18);
+    padding-top: 14px;
+    margin-top: 4px;
+  }
+  .pattern-echo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.95rem;
+    line-height: 1.65;
+    color: rgba(184,144,42,0.75);
+    font-style: italic;
+    margin-top: 6px;
+    padding: 8px 16px;
+    border-left: 1px solid rgba(184,144,42,0.4);
+  }
+
+  /* Continue */
+  .continue-btn {
+    align-self: flex-end;
+    background: rgba(184,144,42,0.12);
+    border: 1px solid rgba(184,144,42,0.45);
+    color: var(--gold);
+    font-family: 'IM Fell English', serif;
+    font-size: 0.88rem;
+    letter-spacing: 0.14em;
+    padding: 9px 26px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .continue-btn:hover { background: rgba(184,144,42,0.09); border-color: var(--gold); }
+
+  /* Progress */
+  .psyche-bar-container {
+    margin-top: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .psyche-label {
+    font-family: 'Playfair Display', serif;
+    font-size: 0.58rem;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--aged);
+    opacity: 0.6;
+    display: flex;
+    justify-content: space-between;
+  }
+  .psyche-track { height: 2px; background: rgba(255,255,255,0.07); }
+  .psyche-fill { height: 100%; background: linear-gradient(90deg, var(--crimson), var(--violet), var(--gold)); transition: width 0.9s ease; }
+
+  /* ── TITLE SCREEN ── */
+  #title-screen {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+    padding: 44px 36px;
+    border: 1px solid rgba(184,144,42,0.4);
+    background: rgba(10,6,12,0.85);
+  }
+  .title-ornament { color: var(--gold); opacity: 0.8; animation: glow 5s ease-in-out infinite; }
+  @keyframes glow { 0%,100%{opacity:0.55} 50%{opacity:1} }
+  .main-title { font-family:'Playfair Display',serif; font-size:2.3rem; line-height:1.2; font-weight:400; color: var(--parchment); }
+  .subtitle { font-family:'Cormorant Garamond',serif; font-size:0.9rem; letter-spacing:0.28em; text-transform:uppercase; color:var(--gold); opacity:0.9; }
+  .intro-text { font-family:'Cormorant Garamond',serif; font-size:1.1rem; line-height:1.9; color: rgba(240,232,216,0.92); max-width:480px; font-weight:300; }
+  .start-btn {
+    margin-top: 10px;
+    background: rgba(184,144,42,0.12);
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    font-family: 'IM Fell English', serif;
+    font-size: 1.05rem;
+    letter-spacing: 0.18em;
+    padding: 13px 46px;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  .start-btn:hover { background: rgba(184,144,42,0.09); letter-spacing: 0.26em; }
+
+  /* ── ENVIRONMENT SELECT ── */
+  #env-screen {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding: 34px 38px;
+    border: 1px solid rgba(184,144,42,0.22);
+    background: rgba(20,12,22,0.65);
+  }
+  .env-screen-title { color: var(--parchment);
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem;
+    color: var(--parchment);
+  }
+  .env-screen-sub {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.05rem;
+    line-height: 1.75;
+    color: rgba(240,232,216,0.72);
+    font-weight: 300;
+  }
+  .env-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 4px;
+  }
+  .env-card {
+    border: 1px solid rgba(184,144,42,0.28);
+    padding: 18px 22px;
+    cursor: pointer;
+    transition: all 0.25s;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .env-card:hover { border-color: rgba(184,144,42,0.7); background: rgba(184,144,42,0.05); }
+  .env-card-title { font-family: 'Playfair Display', serif; font-size: 1.05rem; color: var(--parchment); }
+  .env-card-tagline { font-family: 'Cormorant Garamond', serif; font-size: 0.9rem; color: var(--gold); font-style: italic; opacity: 0.9; }
+  .env-card-desc { font-family: 'Cormorant Garamond', serif; font-size: 0.95rem; line-height: 1.6; color: rgba(240,232,216,0.88); font-weight: 300; margin-top: 2px; }
+
+  /* ── END SCREEN ── */
+  .resolution-badge { font-family:'Playfair Display',serif; font-size:1.65rem; color:var(--gold); text-align:center; }
+  #psyche-scores { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:10px; }
+  .score-pill { border:1px solid rgba(184,144,42,0.28); padding:5px 14px; font-family:'Cormorant Garamond',serif; font-size:0.82rem; color:var(--aged); }
+
+  /* Pattern ledger */
+  .pattern-ledger {
+    border: 1px solid rgba(184,144,42,0.2);
+    padding: 16px 20px;
+    margin-top: 4px;
+  }
+  .pattern-ledger-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 0.62rem;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--gold);
+    opacity: 0.7;
+    margin-bottom: 10px;
+  }
+  .pattern-row {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.92rem;
+    line-height: 1.7;
+    color: rgba(200,184,154,0.8);
+    font-style: italic;
+    padding: 4px 0;
+    border-bottom: 1px solid rgba(184,144,42,0.1);
+  }
+  .pattern-row:last-child { border-bottom: none; }
+
+  /* Utility */
+  .hidden { display: none !important; }
+  .fade-enter { animation: fadeUp 0.65s ease forwards; }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+
+  @media(max-width:520px){
+    .scene-box{padding:22px 18px}
+    .scene-title{font-size:1.3rem}
+    .scene-text{font-size:1rem}
+    .main-title{font-size:1.75rem}
+    #title-screen{padding:28px 18px}
+    #env-screen{padding:22px 18px}
+  }
+</style>
+</head>
+<body>
+<div id="game-container">
+
+  <!-- HEADER (hidden until game starts) -->
+  <div class="header-bar hidden" id="game-header">
+    <span class="game-title">The Inner Theatre</span>
+    <span class="stage-indicator" id="stage-indicator">–</span>
+    <button class="mute-btn" id="mute-btn" onclick="toggleMute()" title="Toggle music">♫</button>
+  </div>
+
+  <!-- BACKGROUND MUSIC -->
+  <audio id="bg-music" src="oedipus-music.mp3" loop preload="auto"></audio>
+
+  <!-- TRAIT PANEL -->
+  <div id="trait-panel" class="hidden"></div>
+
+  <!-- SCREENS -->
+  <div id="title-screen">
+    <div class="title-ornament" style="font-size:2.2rem">⚘</div>
+    <div class="main-title">The Inner Theatre</div>
+    <div class="subtitle">A Psychoanalytic Journey</div>
+    <p class="intro-text">
+      You are about to traverse the invisible landscape of the developing psyche —
+      from first breath through adult life. Every choice you make will become a
+      default, used again and again until it shapes who you are.<br><br>
+      <em>The environment you grow up in will determine which choices serve you best.</em>
+    </p>
+    <div style="color:var(--gold);opacity:0.3;font-size:0.9rem">— — —</div>
+    <button class="start-btn" onclick="showEnvSelect()">Enter the Theatre</button>
+  </div>
+
+  <div id="env-screen" class="hidden">
+    <div class="age-label">Before the curtain rises</div>
+    <div class="env-screen-title">Choose Your World</div>
+    <p class="env-screen-sub">
+      The family you are born into is not your choice. But it will shape your first solutions
+      to life's problems — and those solutions will follow you long after you leave.
+      Choose the environment that calls to you.
+    </p>
+    <div class="env-cards">
+      <div class="env-card" onclick="selectEnv('enmeshed')">
+        <div class="env-card-title">The Warm House</div>
+        <div class="env-card-tagline">A loving mother, a gentle but distant father — intimacy in abundance, separateness in short supply</div>
+        <div class="env-card-desc">Your mother is devoted, present, occasionally overwhelming. She feels your feelings before you do. Your father loves the family but withdraws into work, returning in the evenings like a slightly foreign dignitary. The central challenge: <em>how to have a self when love feels like merger.</em></div>
+      </div>
+      <div class="env-card" onclick="selectEnv('cold')">
+        <div class="env-card-title">The Orderly House</div>
+        <div class="env-card-tagline">Capable, consistent parents — emotionally reserved, high-achieving, reliable but cool</div>
+        <div class="env-card-desc">Your parents are competent and dependable. They provide — shelter, routine, education, security. But warmth is rationed; emotional expression makes them uncomfortable. The central challenge: <em>how to feel at home in your own need when need was met with silence.</em></div>
+      </div>
+      <div class="env-card" onclick="selectEnv('chaotic')">
+        <div class="env-card-title">The Unpredictable House</div>
+        <div class="env-card-tagline">A volatile household — love and rupture in equal measure, the ground always slightly uncertain</div>
+        <div class="env-card-desc">Sometimes your home is warm and wonderful. Other times, something shifts — a mood, a fight, an absence — and the warmth disappears without explanation. Love is real here, but it is not reliable. The central challenge: <em>how to trust when trust has been broken and repaired so many times.</em></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="game-scene" class="hidden">
+    <div class="scene-box fade-enter" id="scene-box"></div>
+    <div class="psyche-bar-container">
+      <div class="psyche-label">
+        <span>The Psyche's Journey</span>
+        <span id="progress-label">–</span>
+      </div>
+      <div class="psyche-track">
+        <div class="psyche-fill" id="psyche-fill" style="width:4%"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// GAME STATE
+// ═══════════════════════════════════════════════════════════
+
+let env = null;           // 'enmeshed' | 'cold' | 'chaotic'
+let stageIndex = 0;
+let traits = {};          // trait_key → count
+let choiceHistory = {};   // stageId → chosen tag
+let stageList = [];       // built after env selection
+
+// Trait display names
+const TRAIT_NAMES = {
+  protest:      'Protest', secure_wait: 'Basic Trust', withdraw_early: 'Self-Contained',
+  assert:       'Assertive', appease:    'Placating',   burst:          'Impulsive',
+  desire_rage:  'Rivalrous',desire_grief:'Mourning',    desire_redirect:'Forward-Oriented',
+  identify:     'Identified',ambivalent: 'Ambivalent',
+  merge_fear:   'Merger-Averse', self_erase: 'Self-Erasing', hypervigilant: 'Hypervigilant',
+  reflect:      'Reflective',    escalate:   'Escalating',   collapse:       'Collapsing',
+  reach_out:    'Reaching Out',  self_reliant:'Self-Reliant',
+  repair:       'Seeks Repair',  settle:     'Settles',      leave:          'Avoids',
+  parent_warm:  'Warm Parent',   parent_law: 'Lawful Parent',parent_lost:    'Enmeshed Parent',
+};
+
+function addTrait(tag, count=1) {
+  if (!tag) return;
+  traits[tag] = (traits[tag]||0) + count;
+  renderTraits();
+}
+
+function hasTrait(tag) { return (traits[tag]||0) > 0; }
+function traitCount(tag) { return traits[tag]||0; }
+
+function dominantTrait(list) {
+  return list.reduce((a,b)=> (traits[a]||0)>=(traits[b]||0)?a:b, list[0]);
+}
+
+function renderTraits() {
+  const panel = document.getElementById('trait-panel');
+  panel.innerHTML = '';
+  for (const [k, v] of Object.entries(traits)) {
+    if (v <= 0) continue;
+    const chip = document.createElement('div');
+    chip.className = 'trait-chip';
+    chip.textContent = (TRAIT_NAMES[k]||k) + (v > 1 ? ` ×${v}` : '');
+    panel.appendChild(chip);
+    setTimeout(()=>chip.classList.add('visible'), 50);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// ENVIRONMENT DATA
+// ═══════════════════════════════════════════════════════════
+
+const ENVS = {
+  enmeshed: {
+    name: 'The Warm House',
+    color: '#c87a3a',
+    motherName: 'Mother',
+    fatherName: 'Father',
+    motherDesc: 'warm, devoted, sometimes suffocating',
+    fatherDesc: 'kind but often absent, emotionally peripheral',
+    challenge: 'how to be separate when love feels like merger',
+    // Stage modifiers
+    texts: {
+      birth_context: 'She is there immediately — almost before you need her. The warmth is total.',
+      separation_fear: 'Your mother appears before the cry has finished. There is scarcely a gap to learn from.',
+      father_presence: 'Your father appears in the evenings, pleasant but slightly peripheral, as if your mother\'s gravitational field leaves little room for him.',
+      autonomy_block: 'When you say no, she looks hurt before she looks firm. The no feels dangerous — not because of punishment, but because of what it does to her face.',
+      oedipal_rival_soft: 'Your father is gentle. He rarely asserts himself enough to feel like a real obstacle. The triangle has one side that barely resists.',
+    }
+  },
+  cold: {
+    name: 'The Orderly House',
+    color: '#3a7a8a',
+    motherName: 'Mother',
+    fatherName: 'Father',
+    motherDesc: 'competent, reliable, emotionally reserved',
+    fatherDesc: 'present, high-achieving, more comfortable with tasks than feelings',
+    challenge: 'how to need when need is met with discomfort',
+    texts: {
+      birth_context: 'She is there — efficient, calm. You are fed and clean. Whether she is moved is harder to read.',
+      separation_fear: 'The gap before she returns is long enough for you to feel it. But she always returns. Reliable if not warm.',
+      father_presence: 'Your father is present — physically present, which is more than many can say. He is competent, interested in your progress, uncomfortable with tears.',
+      autonomy_block: 'When you say no, there is a calm, firm correction. No drama. No negotiation. The limit is clear. So is the fact that your feeling about it is not particularly interesting to them.',
+      oedipal_rival_soft: 'Your father is a clear authority — he commands respect, perhaps even a little awe. The triangle is vivid. He is a real rival and a real model.',
+    }
+  },
+  chaotic: {
+    name: 'The Unpredictable House',
+    color: '#7a3a8a',
+    motherName: 'Mother',
+    fatherName: 'Father',
+    motherDesc: 'loving when present, sometimes overwhelmed or absent',
+    fatherDesc: 'alternately warm and volatile; the axis around which the household tilts',
+    challenge: 'how to trust when the ground keeps moving',
+    texts: {
+      birth_context: 'She holds you tightly. Today the warmth is overwhelming. You will learn that today is not always like today.',
+      separation_fear: 'Sometimes she returns quickly. Sometimes the gap is very long. Your body cannot yet learn which kind of wait this will be.',
+      father_presence: 'Your father is large — emotionally large. When he is good, the house is warm. When something shifts in him, everything shifts. You become expert at reading his face the moment he enters.',
+      autonomy_block: 'When you say no, the response depends entirely on which version of the day this is. Sometimes it is fine. Sometimes the no triggers something much larger. You begin to read the room before speaking.',
+      oedipal_rival_soft: 'Your father\'s presence fills the room. He is at once deeply threatening and deeply needed. The triangle is not simple: you fear him and reach toward him at once.',
+    }
+  }
+};
+
+// ═══════════════════════════════════════════════════════════
+// STAGES
+// Each stage can have:
+//   text: string | fn(env, traits) → string
+//   choices: array of { text, tag, outcome: fn(env,traits)→string, patternEcho: fn(traits)→string|null }
+//   insight: {label, text}
+//   echo: fn(traits)→{label,text}|null   (shows if pattern already established)
+// ═══════════════════════════════════════════════════════════
+
+function buildStages() {
+return [
+
+// ─────────────────────────────────────────────────────────
+// STAGE 0 — BIRTH
+// ─────────────────────────────────────────────────────────
+{
+  id: 'birth',
+  stageLabel: (e)=>'Birth · Age 0',
+  stageGroup: 'Oral Stage',
+  title: 'The World Arrives',
+  text: (e,t)=>`You exist. Not as a thought, not as a name — but as sensation: warmth, cold, pressure, hunger, sound. The world is not yet divided into self and other. There is only the stream.<br><br>
+Then a face. Large, warm, blurred at this distance. <em>${ENVS[e].texts.birth_context}</em><br><br>
+You have no words for what this face means. But your body knows already: <em>this is the centre of the universe.</em> Everything will be organised around it — all desire, all fear, all longing — for longer than you will ever consciously know.`,
+  insight: { label: 'Psychoanalytic Note', text: 'The infant begins in what Freud called "primary narcissism" — no boundary yet between self and world. The primary caregiver\'s face is the first mirror: how she looks at you begins to tell you what you are. Object relations theorists (Winnicott, Klein) would add: her ability to "hold" you — to remain present and attuned even under the pressure of your need — is the foundation on which all later security is built.' },
+  type: 'narrative',
+  buttonText: 'Enter the world'
+},
+
+// ─────────────────────────────────────────────────────────
+// STAGE 1 — FIRST SEPARATION
+// ─────────────────────────────────────────────────────────
+{
+  id: 'separation_1',
+  stageLabel: ()=>'Oral Stage · 3–6 months',
+  stageGroup: 'Oral Stage',
+  title: 'The First Absence',
+  text: (e,t)=>`She leaves the room. It is a small absence — seconds, perhaps a minute — but time does not yet have proportion.<br><br>
+<em>${ENVS[e].texts.separation_fear}</em><br><br>
+The world has contracted to this: the gap where she was. Something in you rises to meet it.`,
+  insight: { label: 'Psychoanalytic Note', text: 'The infant\'s first experiences of absence are formative. Winnicott wrote about the importance of the "good enough" mother — one who is responsive but not perfectly so, because the gap teaches the infant that absence is survivable. Too little gap and the infant never learns to self-soothe; too much gap and the nervous system is overwhelmed before it can integrate the experience. The quality of early waiting shapes the nervous system\'s default setting toward others.' },
+  type: 'choice',
+  prompt: 'The absence stretches. Something stirs in you. What does your body do?',
+  choices: [
+    {
+      text: 'You cry — immediately, urgently, as if the sound itself will bring her back',
+      tag: 'protest',
+      outcome: (e,t)=> e==='enmeshed'
+        ? 'She appears before the cry has reached its full pitch, breathless, apologetic. The world has answered. This is what voices are for.'
+        : e==='cold'
+        ? 'There is a pause before she comes — enough of one for the cry to do its full work. She arrives calm, efficient. The voice worked, but it had to fight for it.'
+        : 'Sometimes the cry brings her immediately. Sometimes it does not. The cry becomes louder, more desperate, tuning itself to the uncertainty.',
+      patternEcho: null
+    },
+    {
+      text: 'You wait — a watchful, stilled quiet, as if conserving something',
+      tag: 'secure_wait',
+      outcome: (e,t)=> e==='enmeshed'
+        ? 'She returns almost before the wait has registered. The waiting barely had time to be waiting. Something quiet is laid down: but it may be trust built on a gap too small to truly learn from.'
+        : e==='cold'
+        ? 'She returns. The wait was real, but she came. Something load-bearing is built in you: the world is, on balance, reliable. This will serve you well.'
+        : 'She returns — this time. The wait taught you something. But the next wait may teach you something different. You are learning a more complex lesson: sometimes waiting pays; sometimes it doesn\'t.',
+      patternEcho: null
+    },
+    {
+      text: 'You turn away — toward the wall, toward your own hands, withdrawing inward',
+      tag: 'withdraw_early',
+      outcome: (e,t)=> e==='enmeshed'
+        ? 'She returns to find you turned away and is distressed by it — perhaps more than you are. The withdrawal has a strange power here: it draws her in even more. You file this away in the body.'
+        : e==='cold'
+        ? 'You turn to your own hands, your own sounds. When she returns, you receive her without much display. She approves of this — it looks like self-sufficiency. In a sense, it already is.'
+        : 'The inward turn is self-protection. In an unpredictable world, needing less is a form of safety. You become, even now, more self-contained than your age would suggest.',
+      patternEcho: null
+    }
+  ]
+},
+
+// ─────────────────────────────────────────────────────────
+// STAGE 2 — TRUST CONSOLIDATES (narrative)
+// ─────────────────────────────────────────────────────────
+{
+  id: 'trust_builds',
+  stageLabel: ()=>'Oral Stage · 6–18 months',
+  stageGroup: 'Oral Stage',
+  title: 'What the Body Learns',
+  text: (e,t)=>{
+    const style = dominantTrait(['protest','secure_wait','withdraw_early']);
+    const styleText = {
+      protest: 'You have learned that the world responds to the urgent voice. The louder the expression, the more reliably the gap is closed. This is not manipulation — it is empiricism. The infant runs experiments, and yours have returned a consistent result.',
+      secure_wait: 'You have learned to wait with something that resembles patience — not passivity, but a quiet faith that the gap will close. This will serve you for a long time.',
+      withdraw_early: 'You have learned to manage the gap from within. Need has already begun to go quiet, turning inward rather than outward. You are becoming self-sufficient earlier than is perhaps ideal.'
+    }[style] || 'A pattern is beginning to form — the body\'s first hypothesis about how the world works.';
+
+    const envText = {
+      enmeshed: `In the Warm House, the overall lesson is: <em>the world is full of love, and love is very close.</em> Perhaps so close that a self is hard to find within it.`,
+      cold: `In the Orderly House, the overall lesson is: <em>the world is reliable, but its reliability is not the same as warmth.</em> You are learning to meet reliability with reliability — which is its own kind of competence.`,
+      chaotic: `In the Unpredictable House, the overall lesson is: <em>the world is real, love is real, but neither is guaranteed.</em> Your nervous system is becoming an instrument finely tuned to read ambient signals.`
+    }[e];
+    return `${styleText}<br><br>${envText}<br><br>
+Erikson called this stage's central question: <em>basic trust versus basic mistrust</em>. The answer is never simply one or the other — it is a ratio, a tilt, a lean. And that lean will whisper beneath every relationship you later form, like a bass note you will mostly be unaware of.`;
+  },
+  insight: { label: 'Psychoanalytic Note', text: 'The internal working model — the implicit template of what relationships are like — is established in this period. Secure attachment forms when the caregiver is reliable enough, warm enough, present enough. Anxious attachment when presence is unpredictable. Avoidant attachment when emotional bids are consistently unmet. These are not destinies but defaults — the first draft, not the final version.' },
+  type: 'narrative',
+  buttonText: 'Grow older'
+},
+
+// ─────────────────────────────────────────────────────────
+// STAGE 3 — AUTONOMY (Age 2)
+// ─────────────────────────────────────────────────────────
+{
+  id: 'autonomy',
+  stageLabel: ()=>'Anal Stage · Age 2',
+  stageGroup: 'Anal Stage',
+  title: 'The Will Awakens',
+  text: (e,t)=>`You are two. Something seismic has occurred: you have discovered that <em>you</em> exist separately, and that this separate self can say <em>No</em>.<br><br>
+The word arrives with shocking power. You say it to the spoon. You say it to the coat. You say it sometimes simply to feel the force of your own will meet the resistance of the world. This is not defiance — it is the first rough draft of selfhood.<br><br>
+<em>${ENVS[e].texts.autonomy_block}</em>`,
+  echo: (t)=>{
+    if (hasTrait('protest')) return { label: 'Pattern Already in Motion', text: 'The same urgency that drove your early cry is in the No too. The body knows only one volume for protest.' };
+    if (hasTrait('withdraw_early')) return { label: 'Pattern Already in Motion', text: 'Even the No is quiet. It comes out sideways — as sulking, as refusal to engage — rather than as declaration. The inward turn has a new shape.' };
+    return null;
+  },
+  insight: { label: 'Psychoanalytic Note', text: 'Freud\'s "anal stage" is misnamed for modern ears — it is fundamentally about the emergence of autonomous will and the dialectic between control and surrender, assertion and compliance. The healthy outcome is neither total submission nor pure willfulness, but the ability to assert one\'s own wants while remaining in relationship — what Winnicott called "the capacity to be alone in the presence of another."' },
+  type: 'choice',
+  prompt: `You are outside — in the yard, the garden, wherever the world opens up and belongs to no one. You are absorbed in something: a stick, a patch of dirt, the particular pleasure of being uncontained.<br><br>You do not want to come inside. Your whole body is against it. But the call comes from the doorway.`,
+  choices: [
+    {
+      text: 'You assert yourself clearly — you say No, firmly, and hold your ground',
+      tag: 'assert',
+      outcome: (e,t)=> {
+        if (e==='enmeshed') return 'The assertion lands heavily. She looks wounded, then anxious, then overrides you with a flood of warmth and gentle pressure. The No worked physically — you stayed outside another minute — but it cost something in the emotional temperature. <em>You learn: self-assertion here has a relational price.</em>';
+        if (e==='cold') return 'There is a moment of genuine standoff. Then a calm, firm repetition of the expectation. You comply, but with dignity — you made your position known. <em>You learn: assertion is met with counter-assertion, not warmth, but it is taken seriously.</em>';
+        return 'The response is unpredictable — today it is fine; yesterday it would have ignited something larger. You cannot quite decode the rules. <em>You learn: assertion is a gamble, the outcome depends on the day.</em>';
+      },
+      patternEcho: (t)=> hasTrait('protest') ? 'You have been protesting since the first absence. The form is more sophisticated now; the function is the same.' : null
+    },
+    {
+      text: 'You negotiate — "five more minutes?" — testing whether desire can be spoken',
+      tag: 'assert',
+      outcome: (e,t)=> {
+        if (e==='enmeshed') return 'She brightens at the negotiation — it keeps you in dialogue, which she prefers. She gives you ten minutes. The relationship has solved the problem. <em>You learn: speech, directed toward her, is the most powerful tool.</em>';
+        if (e==='cold') return 'She considers the request briefly, then concedes a compromise. The negotiation was treated as a reasonable bid. <em>You learn: rational articulation of desire is effective. Keep the feeling out of it; name what you want.</em>';
+        return 'It depends entirely on which parent is asking and what kind of day it is. Sometimes the negotiation works beautifully. Other times it is ignored as if you hadn\'t spoken. <em>You learn: speak up, but don\'t rely on being heard.</em>';
+      },
+      patternEcho: (t)=> hasTrait('secure_wait') ? 'The same measured quality that marked your early waiting is here in the negotiation. You instinctively find the middle register.' : null
+    },
+    {
+      text: 'You comply immediately — folding the feeling inward, going inside without protest',
+      tag: 'appease',
+      outcome: (e,t)=> {
+        if (e==='enmeshed') return 'She is pleased, relieved — the harmony is intact. But somewhere in you, the unexpressed No settles like sediment. <em>You learn: compliance preserves warmth. And the self learns to be quiet about what it wants.</em>';
+        if (e==='cold') return 'The compliance is unremarkable — as expected. No particular warmth is offered in exchange, but no rupture occurs either. <em>You learn: compliance is safe and invisible. The cost is that you, too, become a little invisible.</em>';
+        return 'Compliance is the safest move today. The No, unexpressed, does not risk igniting anything. <em>You learn: read the room first, want second.</em>';
+      },
+      patternEcho: (t)=> hasTrait('withdraw_early') ? 'The inward turn you learned as an infant has a behavioral form now: you fold, you comply, you go quiet. The pattern completes itself.' : null
+    }
+  ]
+},
+
+// ─────────────────────────────────────────────────────────
+// STAGE 4 — THE FATHER ENTERS (Age 3)
+// ─────────────────────────────────────────────────────────
+{
+  id: 'father_enters',
+  stageLabel: ()=>'Phallic Stage · Age 3',
+  stageGroup: 'Phallic Stage',
+  title: 'The Third',
+  text: (e,t)=>`You are three. There are words now, and stories, and a sense of yourself as a character in a world with other characters.<br><br>
+And there is, with new sharpness, a <em>triangle</em>.<br><br>
+<em>${ENVS[e].texts.father_presence}</em><br><br>
+Something about this arrangement troubles you in a way you cannot articulate. He and she share something — a language, a look, a bed — from which you are excluded. You want to be the centre of her world entirely. You remember, dimly, that you almost were.<br><br>
+The rival has arrived. And he is also — somehow — the one you most want to become.`,
+  insight: { label: 'Psychoanalytic Note', text: 'Lacan\'s concept of the "Name-of-the-Father" extends Freud here: the father (or the third term — it need not be a literal father) represents the principle of limit, of "not everything can be had." The triangle is constitutive of desire itself: we want most acutely what is partially withheld. The father\'s role is not primarily to threaten but to introduce the child to the reality of desire\'s structure.' },
+  type: 'narrative',
+  buttonText: 'Face the triangle'
+},
+
+// ─────────────────────────────────────────────────────────
+// STAGE 5 — THE DESIRE (Age 3–4)
+// ─────────────────────────────────────────────────────────
+{
+  id: 'desire',
+  stageLabel: ()=>'Phallic Stage · Age 3–4',
+  stageGroup: 'Phallic Stage',
+  title: 'The Wanting',
+  text: (e,t)=>`You make an announcement one evening — with total, unself-conscious certainty — that you are going to marry your mother when you grow up.<br><br>
+The adults exchange a look. Something passes between them that you cannot decode. Your father's expression changes — slightly, briefly — but the change registers.<br><br>
+This declaration was not simply naive. It expressed something real and important: the desire to be everything to someone, to restore the total possession of the earliest months, to eliminate the rival and be restored to the centre.<br><br>
+It also, for the first time, put you in direct conflict with someone larger.`,
+  echo: (t)=>{
+    if (hasTrait('appease')) return { label: 'Pattern in Motion', text: 'Even as you made the announcement, some part of you was watching the room. The declaration was bold, but its aftermath will be shaped by what you have already learned about the cost of assertion.' };
+    if (hasTrait('protest')) return { label: 'Pattern in Motion', text: 'The urgency of the desire is familiar — it has the same quality as the cry, the same intensity, the same certainty that the feeling must be expressed.' };
+    return null;
+  },
+  insight: { label: 'Psychoanalytic Note', text: 'The Oedipal desire is universal — not because all children literally want to marry a parent, but because all children must navigate the first experience of desire meeting prohibition, of wanting what cannot be had, of a third party who embodies the limit. What the child does with this experience — how the desire is handled, metabolised, and redirected — shapes the basic structure of adult wanting.' },
+  type: 'choice',
+  prompt: `Your father has gently but firmly corrected you: your mother is his, and one day you will find your own person to love. How does this land in you?`,
+  choices: [
+    {
+      text: 'As rage — a hot, wordless fury at being displaced and corrected',
+      tag: 'desire_rage',
+      outcome: (e,t)=> {
+        if (e==='enmeshed') return 'Your mother looks alarmed. Your father, uncertain. The rage fills the room, and the room is not sure what to do with it. <em>The anger is real — and it is not punished, exactly, but it creates a ripple. The mother moves to soothe. The father steps back. The triangle bends under the force of your feeling.</em>';
+        if (e==='cold') return 'Your father addresses the rage calmly and firmly. He names it, contains it, redirects it. The rage is not met with rage — but it is not welcomed either. <em>You learn that large feelings produce a kind of controlled alarm in others. They are managed, not received.</em>';
+        return 'Your father\'s response to your rage depends on what is happening inside him. Today it is handled. Another day it might ignite something in return. <em>You learn that your rage is powerful — and that its power is unpredictable.</em>';
+      },
+      patternEcho: (t)=> hasTrait('protest') ? 'The rage has the same quality as your earliest cry — full, urgent, total. The form has changed; the function is identical.' : null
+    },
+    {
+      text: 'As grief — a sadness that something real is ending, something being taken',
+      tag: 'desire_grief',
+      outcome: (e,t)=> {
+        if (e==='enmeshed') return 'Your mother is moved by the grief and gathers you up. Your father watches. The grief, here, is effective — it produces closeness, it produces tenderness. <em>You learn: sadness opens arms. This will be remembered.</em>';
+        if (e==='cold') return 'The grief is met with gentle practicality. You are comforted, briefly, and then redirected. <em>You learn: sadness is acknowledged but not dwelt in. There is something after sadness, and the adults want you to move there quickly.</em>';
+        return 'Your grief lands differently depending on the day. Sometimes it produces real tenderness, a moment of genuine closeness. Sometimes it seems to overwhelm the household and produce anxiety rather than comfort. <em>Your feeling is real; its reception is unreliable.</em>';
+      },
+      patternEcho: (t)=> hasTrait('withdraw_early') ? 'The grief is quiet, turned inward. Not a cry, but a stillness. The same inward movement, in a new register.' : null
+    },
+    {
+      text: 'As curiosity — if not her, then who? The desire redirects forward',
+      tag: 'desire_redirect',
+      outcome: (e,t)=> `The question hangs in you like something beginning. <em>If not now, then someday. If not her, then someone.</em> The desire does not die — it picks up its things and begins to look for somewhere else to live. This is precisely what culture needs desire to do. ${e==='cold' ? 'Your parents look pleased, almost proud. The rational, forward-oriented response is the one they understand best.' : e==='enmeshed' ? 'Your mother watches this redirection with something complicated — relief, and perhaps a small, unacknowledged flicker of loss.' : 'The curiosity gives the situation somewhere to go, which is a relief in a household where emotions often have nowhere to go.'}`,
+      patternEcho: (t)=> hasTrait('secure_wait') ? 'The same forward patience that marked your waiting is in this curiosity. You look toward what will be, rather than collapsing into what cannot be.' : null
+    }
+  ]
+},
+
+// ─────────────────────────────────────────────────────────
+// STAGE 6 — CASTRATION ANXIETY / THE LAW (Age 4–5)
+// ─────────────────────────────────────────────────────────
+{
+  id: 'the_law',
+  stageLabel: ()=>'Phallic Stage · Age 4–5',
+  stageGroup: 'Phallic Stage',
+  title: 'The Prohibition',
+  text: (e,t)=>{
+    const envColor = {
+      enmeshed: 'The law arrives not as thunder but as the slow accumulation of a thousand small moments: the look on your mother\'s face when you try to climb between your parents in the morning. The way she gently but consistently sends you back to your own bed. The way your father\'s presence makes certain things simply unavailable, as if by atmospheric pressure rather than rule.',
+      cold: 'The law is clear here — almost explicit. The rules of the household are well-defined. You are the child; they are the parents. There are places you do not go, things you do not touch, moments that are not yours. The prohibition is delivered without cruelty, but also without ambiguity.',
+      chaotic: 'The law is inconsistent — sometimes rigorously enforced, sometimes ignored. This inconsistency is its own kind of message: that the prohibition is real, but its application depends on forces outside your control. You become an expert in reading when the law is active and when it is dormant.'
+    }[e];
+    return `Something happens that is very hard to put into rational terms because it does not live there.<br><br>
+The child begins to sense — through glances, tones, the texture of adults' reactions — that the desire for the primary caregiver is not just unattainable but <em>forbidden</em>. Not "not allowed" like touching the stove, but something heavier. A law that seems older than any rule.<br><br>
+<em>${envColor}</em><br><br>
+Freud called the dread accompanying this recognition <em>castration anxiety</em> — the wordless terror that pursuing the forbidden desire would cost something irreplaceable. The language is anatomical, but the experience is existential: the fear of being unmade.`;
+  },
+  insight: { label: 'Psychoanalytic Note', text: 'The superego — the internalized authority — is built from this moment outward. The external prohibition becomes an internal voice; the father\'s law becomes one\'s own conscience. This process is never clean: the superego always retains the harshness, the irrationality, the absolutism of the original prohibition. "The superego," Freud wrote, "does not merely say \'do not do this\' — it says \'you should not want to do this.\'"' },
+  type: 'narrative',
+  buttonText: 'Accept the limit'
+},
+
+// ─────────────────────────────────────────────────────────
+// STAGE 7 — IDENTIFICATION (Age 5)
+// ─────────────────────────────────────────────────────────
+{
+  id: 'identification',
+  stageLabel: ()=>'Phallic Stage · Age 5',
+  stageGroup: 'Oedipal Resolution',
+  title: 'If You Cannot Have, Become',
+  text: (e,t)=>`Unable to have what the father has, the psyche performs one of its most remarkable operations: it begins to <em>become</em> him.<br><br>
+Not consciously. Not deliberately. But the child starts imitating his walk, wanting to know what he knows, watching how he moves through the world. The rivalry is being metabolised into aspiration. The aggression is becoming admiration.<br><br>
+<em>${{
+  enmeshed: 'In the Warm House, this turn toward the father is also a turn away from total merger with the mother — a developmental necessity that is slightly tinged with disloyalty. As you begin to identify with your father, your mother watches, complicated.',
+  cold: 'In the Orderly House, the father is a clear template: competent, controlled, emotionally reserved. Identification means learning to be effective, to achieve, to manage feeling rather than express it. There is much to admire and something to lose.',
+  chaotic: 'In the Unpredictable House, identification is complicated by the father\'s unpredictability. You want to be like him when he is good — warm, funny, large. You do not want to be like him when he is frightening. The identification is partial, selective, effortful.'
+}[e]}</em>`,
+  echo: (t)=>{
+    if (hasTrait('desire_rage')) return { label: 'Pattern in Motion', text: 'The rage toward the father is transforming. The same heat that was opposition is becoming fuel for something else — wanting what he has, wanting to do what he does. Rivalry and admiration have always been closer than they appear.' };
+    return null;
+  },
+  insight: { label: 'Psychoanalytic Note', text: 'Identification with the same-sex parent is the engine of cultural transmission. By taking on the father\'s values, prohibitions, and ideals, the child joins the symbolic order — enters culture, history, language as a full participant. The superego is essentially a portrait of the father\'s moral universe hung on the walls of the inner life.' },
+  type: 'choice',
+  prompt: `Your father is working on something — fixing something, making something, occupied in a way that usually means he is unavailable. Today he pauses and looks at you. 'Do you want to help?'`,
+  choices: [
+    {
+      text: 'Yes — immediately, eagerly. You want to learn everything.',
+      tag: 'identify',
+      outcome: (e,t)=> {
+        if (e==='enmeshed') return 'You lean toward him. Your mother watches from the doorway with a complicated expression. Something is shifting — you are moving toward him, which means, fractionally, away from her. This is exactly right, and it does not feel entirely comfortable for anyone. <em>The identification is working.</em>';
+        if (e==='cold') return 'He teaches methodically. You absorb. There is a quality of connection in this room — not warm exactly, but real. Something is being transmitted: competence, patience, the ability to focus on a problem. <em>You are becoming a version of him, and this version is capable.</em>';
+        return 'You step in quickly, before the invitation can be withdrawn — you have learned not to hesitate when warmth is offered. He is good today. The good version of him is someone you want very much to become. <em>You hold onto this version of him carefully.</em>';
+      },
+      patternEcho: (t)=> hasTrait('desire_redirect') ? 'The forward-orientation of your desire finds its clearest expression here. He is what you can become. This is the desire redirected.' : null
+    },
+    {
+      text: 'You hesitate — the wariness from the rivalry is still in your body',
+      tag: 'ambivalent',
+      outcome: (e,t)=> {
+        if (e==='enmeshed') return 'You step forward eventually, but with caution. The ambivalence between wanting his world and wanting to stay in your mother\'s is still unresolved. <em>The identification is happening, but it carries complexity. Both pulls are real.</em>';
+        if (e==='cold') return 'He waits. The patience here is reliable — he will not withdraw the invitation. Eventually you step in. <em>The ambivalence is noted, not commented upon. You are allowed to arrive slowly.</em>';
+        return 'The hesitation is wise in this household. You assess him first — is today a day where stepping in is safe? It seems to be. You approach. <em>The identification is real, but it is also measured, earned moment by moment.</em>';
+      },
+      patternEcho: (t)=> hasTrait('appease') ? 'Even the ambivalence is cautious — you are managing the relationship rather than entering it freely. Old habits.' : null
+    },
+    {
+      text: 'You sit nearby without quite joining — present but not committed',
+      tag: 'ambivalent',
+      outcome: (e,t)=> `You are close but not in. You watch, you absorb, but you preserve the option to retreat. <em>${e==='chaotic' ? 'In this household, proximity without commitment is a sophisticated strategy — you get the warmth without the risk. It will serve you well here. In other environments, later, it will look like half-heartedness.' : 'There is something to learn here even at this distance. But the full gift of the encounter — being taken in, taught, made into something — is held at bay.'}</em>`,
+      patternEcho: (t)=> hasTrait('withdraw_early') ? 'The early inward turn is still operating. You are present — which is more than before — but not all the way in. The self keeps something back.' : null
+    }
+  ]
+},
+
+// ─────────────────────────────────────────────────────────
+// STAGE 8 — PATTERN REFLECTION (Age 5–6)
+// ─────────────────────────────────────────────────────────
+{
+  id: 'pattern_reflection_1',
+  stageLabel: ()=>'Oedipal Resolution · Age 5–6',
+  stageGroup: 'Oedipal Resolution',
+  title: 'The First Default',
+  text: (e,t)=>{
+    const dominant = dominantTrait(['protest','secure_wait','withdraw_early','appease','assert','identify','ambivalent']);
+    const descMap = {
+      protest: 'When something is wrong, you make it known — immediately, fully, with the whole volume of yourself. This is your first solution. You have used it for crying, for tantrums, for the rage of being displaced. It <em>works</em> — most of the time, in the ways that mattered most to you. It has become your default.',
+      secure_wait: 'You have learned to wait with something resembling trust — that the gap will close, that the other will return, that your needs can be held a moment before they are met. This is your first solution. Quiet, load-bearing, reliable.',
+      withdraw_early: 'When it is uncertain or painful, you have learned to turn inward. To need less, to go quiet, to find what you need in yourself rather than risk the uncertainty of the other. This is your first solution — self-sufficiency as protection.',
+      appease: 'You have learned to read what is wanted and move toward it. To fold the self\'s wants inward when they conflict with the room\'s temperature. To keep the peace, preserve the connection. This is your first solution.',
+      assert: 'You have learned to name what you want, negotiate for it, hold your ground — at least somewhat. This is your first solution: the self has a voice and uses it.',
+      identify: 'You have learned to admire and emulate. The rival becomes the teacher. The desire to possess is transformed into the desire to become. This is your first solution — aspiration.',
+      ambivalent: 'You have learned to be in two places at once — partly in, partly out; partly wanting, partly holding back. The ambivalence is not weakness; it is a form of complexity. It is your first solution to an impossible situation.'
+    };
+    const desc = descMap[dominant] || 'A pattern is taking shape — your signature response to difficulty and desire.';
+
+    return `${desc}<br><br>
+You are five years old, and you already have a default. Not consciously — you could not name it. But the body knows. The nervous system has run enough experiments to have preferences, tendencies, a characteristic way of moving through the world.<br><br>
+<em>This default was learned here, in this house, in response to these specific conditions. It was the right answer for this environment. The question that the rest of your life will ask is: when the environment changes, will the answer change with it?</em>`;
+  },
+  insight: { label: 'Psychoanalytic Note', text: 'Character — in the psychoanalytic sense — is the set of ego defenses and relational strategies that became automatic because they once worked. The problem is not that we develop character. The problem is that character tends to be applied indiscriminately, regardless of whether the current situation resembles the original one that produced it. The work of analysis is to create space between the situation and the response — to make the automatic slightly less automatic.' },
+  type: 'narrative',
+  buttonText: 'Enter the wider world'
+},
+
+// ─────────────────────────────────────────────────────────
+// STAGE 9 — LATENCY / SCHOOL (Age 6–10)
+// ─────────────────────────────────────────────────────────
+{
+  id: 'latency',
+  stageLabel: ()=>'Latency Period · Ages 6–10',
+  stageGroup: 'Latency',
+  title: 'The Wider World',
+  text: (e,t)=>`School arrives, and with it: <em>other people</em>. Not family — strangers. Children who do not know you, who carry their own defaults, their own invisible inheritances, their own desperate hypotheses about how people work.<br><br>
+The oedipal drama quiets for a time. Freud called this the latency period — not because the unconscious sleeps, but because the culture needs the child to turn outward: to learn to read, to cooperate, to compete, to lose without being destroyed.<br><br>
+${({
+  enmeshed: 'You arrive at school having been held very close. The distance from home is vivid — more than some others seem to feel it. But you know how to be warm; you know how to draw people in. The question is whether you know how to be separate, where your feelings end and another\'s begin.',
+  cold: 'You arrive at school organised, capable, and somewhat puzzled by the noise of it. The social chaos — the tears, the sudden alliances and ruptures, the emotional weather — is not quite your idiom. You are competent; you are not always easy to reach.',
+  chaotic: 'You arrive at school with a sophisticated radar. You already know how to read a room, how to assess mood, how to position yourself relative to the emotional weather. This is social intelligence — hard-won.'
+})[e]}`,
+  echo: (t)=>null,
+  insight: { label: 'Psychoanalytic Note', text: 'The latency period is when the ego develops its secondary process capacities — reality-testing, rational thought, the ability to defer gratification. The relational patterns established in the oedipal period are now rehearsed in the schoolyard: who is the rival, who is the beloved, who holds authority, how do you respond when you don\'t get what you want. The same drama, miniaturised, played out a hundred times a week.' },
+  type: 'choice',
+  prompt: `A child in your class — a friend, someone you like — consistently gets more attention from the teacher than you do. The same current you felt at home is active: the third party, the rival, the thing between you and what you want.`,
+  choices: [
+    {
+      text: 'You compete openly — you work harder, perform more, angle for the teacher\'s attention',
+      tag: 'assert',
+      outcome: (e,t)=>{
+        const echo = hasTrait('protest') ? 'The urgency that has always driven you is in this competition. You have been competing since infancy; you are good at it now.' : hasTrait('identify') ? 'The same impulse that drew you toward your father — to become, to match, to aspire — drives this effort.' : '';
+        return `You compete. Sometimes you win the teacher's attention; sometimes not. ${e==='enmeshed' ? 'The competition feels slightly illicit — at home, warmth was available without this kind of effort. Here, you have to earn it, which is both clarifying and galling.' : e==='cold' ? 'The competition is clean and familiar. You are organized for exactly this. Achievement is the currency you understand.' : 'You compete energetically, but with one eye on the emotional weather — you know from experience that visible effort can attract unwanted attention as easily as wanted.' }<br><br><em>${echo}</em>`;
+      },
+      patternEcho: (t)=> hasTrait('protest') || hasTrait('assert') ? 'The assertion you have been practising since age two has a new arena. You bring it here automatically.' : null
+    },
+    {
+      text: 'You withdraw — the rivalry feels too uncomfortable, so you reduce your desire',
+      tag: 'appease',
+      outcome: (e,t)=>`You step back from the competition. You tell yourself you don\'t really mind. <em>${hasTrait('withdraw_early') ? 'The inward turn is immediate and familiar — you have been practicing it since you were months old.' : hasTrait('appease') ? 'The compliant fold of the self is practiced now. You can do it quickly, cleanly.' : 'The retreat is new but recognisable — you have done something like this before.'}</em><br><br>${e==='enmeshed' ? 'The withdrawal here is interesting: at home, your desires were always so visible. Here, you discover that smaller desire produces less friction. It is a relief, and a loss.' : e==='cold' ? 'The withdrawal looks like not caring. And not caring is socially legible in this world — it does not draw attention. But you do care; the desire has just learned to go quiet.' : 'The reduction of desire is protective. In an unpredictable environment, wanting less is safety. The school is a new environment, but the principle transfers immediately.'}`,
+      patternEcho: (t)=> hasTrait('withdraw_early') || hasTrait('appease') ? 'You have been practising this reduction of visible desire since early childhood. It arrives here automatically.' : null
+    },
+    {
+      text: 'You find a way around — befriend the rival, join their circle rather than oppose it',
+      tag: 'identify',
+      outcome: (e,t)=>`Instead of competing with the favoured child, you approach them. You are curious about what makes them appealing. <em>If you cannot beat them, befriend them. If you cannot have the teacher's attention alone, have it in their company.</em><br><br>This is the same move you made with your father — identification rather than opposition. The triangle becomes a collaboration. It is sophisticated for your age. ${e==='chaotic' ? 'In an unpredictable world, making allies of rivals is good strategy. You have been doing something like this with your father for years.' : ''}`,
+      patternEcho: (t)=> hasTrait('identify') ? 'The identification move — rival into model, opposition into alliance — has become your signature. You are bringing it everywhere now.' : null
+    }
+  ]
+},
+
+// ─────────────────────────────────────────────────────────
+// STAGE 10 — LATENCY: FIRST CLOSE FRIENDSHIP (Age 8–9)
+// ─────────────────────────────────────────────────────────
+{
+  id: 'friendship',
+  stageLabel: ()=>'Latency · Age 8–9',
+  stageGroup: 'Latency',
+  title: 'The First Friend',
+  text: (e,t)=>`There is a child — you have known them for two years now — with whom something different is possible. With them, you are more yourself than you are with anyone else. It is the first rehearsal for adult intimacy.<br><br>
+But the rehearsal is imperfect. One afternoon, without explanation, they exclude you from a game they are playing with someone else. The triangle reappears — miniaturised, schoolyard-scale — but with the full weight of the original.`,
+  echo: (t)=>{
+    const dominant = dominantTrait(['protest','secure_wait','withdraw_early','appease']);
+    const map = {
+      protest: { label: 'Pattern Recognised', text: 'The exclusion lands like the original absence — the one that first produced the cry. The urgency to close the gap, to be let back in, rises immediately.' },
+      secure_wait: { label: 'Pattern Recognised', text: 'You feel the exclusion — of course you do — but something in you suspects it is not permanent. The faith that gaps close has been tested before and held.' },
+      withdraw_early: { label: 'Pattern Recognised', text: 'The exclusion confirms something you have always half-believed: closeness is not safe. The inward turn arrives almost before the sting does.' },
+      appease: { label: 'Pattern Recognised', text: 'Your first instinct is to figure out what you did wrong — what you need to change to be let back in. The self turns toward the other\'s experience rather than your own.' }
+    };
+    return map[dominant] || null;
+  },
+  insight: { label: 'Psychoanalytic Note', text: 'Peer relationships in latency are where oedipal dynamics are first rehearsed outside the family. The closeness of best friendship, the pain of exclusion, the jealousy of the rival, the longing to be special — these are the oedipal drama in civilian clothes. The responses children develop here become the templates they bring to adult friendship and love.' },
+  type: 'choice',
+  prompt: 'Your best friend has chosen someone else today. The familiar current runs through you. What do you do?',
+  choices: [
+    {
+      text: 'You go to them and ask directly: "Why am I not included?"',
+      tag: 'assert',
+      outcome: (e,t)=>`The directness is clear and somewhat brave. ${e==='enmeshed' ? 'You have always been direct about feelings — the Warm House made emotion legible. The friend is surprised and touched. You are back in the game.' : e==='cold' ? 'The directness is somewhat foreign to you — the Orderly House preferred managed silence — but you have seen it work in negotiation. It works here too, if awkwardly.' : 'The directness is a gamble — you are not always sure how directness will land. Today it works. Today the friend responds. You note this.'} <em>You have learned: asking gets you further than waiting or withdrawing. File this.</em>`,
+      patternEcho: (t)=> hasTrait('assert') ? 'You have been practising directness since you were two. The form is more sophisticated; the move is the same.' : null
+    },
+    {
+      text: 'You leave them to it — retreat, find something to do alone, make yourself need less',
+      tag: 'withdraw_early',
+      outcome: (e,t)=>{ const en = e==="cold" ? "The self-sufficiency feels natural here — even praised. You handle it well. But the handling has a cost you do not inventory." : e==="chaotic" ? "Retreating when things turn uncertain is familiar. You are safer alone than in an unreliable connection. The logic holds — here, now. But it may calcify." : "This is unusual for you — normally you would press closer. But something new is being learned: you can survive distance. It hurts more than it should, but you can."; return `You remove yourself. The pain is real but you manage it by reducing the surface area of your need. ${en} <em>You are learning to carry something alone. It will become a habit.</em>`; },
+      patternEcho: (t)=> hasTrait('withdraw_early') ? 'The first response — inward, alone, quieter — is so practiced now it requires no decision. It happens before you have chosen it.' : null
+    },
+    {
+      text: 'You play with someone else nearby — making sure you are seen not to be alone',
+      tag: 'appease',
+      outcome: (e,t)=>`You manage the rejection by managing the appearance of rejection. You are not alone — or at least you make sure it looks that way. <em>Pride, or something like it, is being used to process pain.</em> ${e==='enmeshed' ? 'In the Warm House, you were never quite invisible before. The performance of okayness is slightly new. It takes something out of you.' : e==='chaotic' ? 'Managing appearances is not new — you have been reading rooms and managing others\' impressions of your state for years. The skill transfers.' : ''} <em>You are learning to curate what others see of your inner life. This is a skill. It is also a distance from yourself.</em>`,
+      patternEcho: (t)=> hasTrait('appease') ? 'The compliance — giving the appearance of being fine — has been your default since early childhood. It wears different costumes across the years.' : null
+    }
+  ]
+},
+
+// ─────────────────────────────────────────────────────────
+// STAGE 11 — ADOLESCENCE: PUBERTY (Age 12–13)
+// ─────────────────────────────────────────────────────────
+{
+  id: 'puberty',
+  stageLabel: ()=>'Adolescence · Age 12–13',
+  stageGroup: 'Adolescence',
+  title: 'The Return',
+  text: (e,t)=>`Puberty arrives like a depth charge detonated in still water.<br><br>
+Everything that was quiet is loud again. Desire returns — sharper, more specifically sexual, more urgently bodily — and it returns organised by the old oedipal patterns. The template laid down at age four or five now shapes who attracts, who repels, what feels transgressive but irresistible.<br><br>
+${({
+  enmeshed: 'In the Warm House, adolescence has an additional charge: separating from a mother whose love has been intense and close is not simple. The sexuality that is emerging is also a vehicle for separation — for finding something, someone, that belongs entirely to you and not to her. The developmental task is urgent.',
+  cold: 'In the Orderly House, the emotional intensity of adolescence is somewhat alien. The managed feelings of childhood give way to something unmanageable. The body has opinions the mind has not approved. This disorder is both disturbing and, in some way, a relief — it breaks open what has been too tightly held.',
+  chaotic: 'In the Unpredictable House, adolescence is one more version of the long experience: intensity, uncertainty, the ground moving. You are, in some ways, more prepared for this than others. You have always lived in high emotional weather.'
+})[e]}<br><br>
+The first person you find yourself genuinely, bodily drawn to is — interesting. There is something in them that recalls the original beloved, though you would not recognise this and could not name it. A tone, a quality of attention, an ineffable warmth or coolness that fits some shape in you that was cut long ago.`,
+  insight: { label: 'Psychoanalytic Note', text: 'Freud described adolescence as a "second Oedipus" — the reawakening of infantile sexuality, now genitally organised. The adolescent must find new objects outside the family, which requires the loosening of original incestuous ties. The object chosen is always, in some sense, both a repetition and a departure: the unconscious reaches for the familiar; the ego pushes toward the new. The degree of departure determines the degree of freedom.' },
+  type: 'narrative',
+  buttonText: 'Enter desire'
+},
+
+// ─────────────────────────────────────────────────────────
+// STAGE 12 — FIRST LOVE (Age 14–16)
+// ─────────────────────────────────────────────────────────
+{
+  id: 'first_love',
+  stageLabel: ()=>'Adolescence · Age 14–16',
+  stageGroup: 'Adolescence',
+  title: 'First Love',
+  text: (e,t)=>`It happens. There is a person. Everything is reorganised around them.<br><br>
+You are learning what your desire is like when it has a living object — what you do when you want someone, when they want you back, when they don't, when they come close and then pull away. All of it is new. None of it is entirely new.<br><br>
+<em>The default you built in childhood follows you here like a shadow.</em>`,
+  echo: (t)=>{
+    const dominant = dominantTrait(['protest','secure_wait','withdraw_early','appease','assert','identify','ambivalent']);
+    const map = {
+      protest: { label: 'Pattern in Motion', text: 'The urgency is back. Desire, for you, is loud — it fills the body, it demands expression, it closes the gap. This is the same force that has driven every significant emotional moment since infancy. First love will show you its costs and its gifts.' },
+      secure_wait: { label: 'Pattern in Motion', text: 'You bring something unusual to this: a capacity to want without being destroyed by the wanting. The faith that gaps close — built in those earliest months — is here.' },
+      withdraw_early: { label: 'Pattern in Motion', text: 'Even in desire, there is a held-backness. You want them — deeply, genuinely — but something keeps a distance. The closeness is both what you seek and what you protect against.' },
+      appease: { label: 'Pattern in Motion', text: 'You are already organising yourself around what they seem to want. Your own wanting is real, but it moves immediately to serve theirs. The self-erasure is so practiced now it feels like love.' }
+    };
+    return map[dominant] || null;
+  },
+  insight: { label: 'Psychoanalytic Note', text: 'Transference — the unconscious displacement of feelings from past relationships onto present ones — is the normal texture of love. We always love with some portion of the feeling belonging to an earlier figure. First love is often the fullest expression of this: almost entirely organised by the template, with the actual other person only partially in view. "We fall in love," wrote the analyst Adam Phillips, "with someone who fits our symptoms."' },
+  type: 'choice',
+  prompt: `They are wonderful. They are also, sometimes, unavailable — drawn to someone else, uncertain about you, not quite giving you what you most want. The familiar current runs.`,
+  choices: [
+    {
+      text: 'You express your feeling directly — you tell them what you want and how you feel',
+      tag: 'assert',
+      outcome: (e,t)=>`${e==='enmeshed' ? 'The expression comes easily — emotional directness has always been the native language of the Warm House. But here, outside the house, it lands differently. Some people receive it. This one looks slightly alarmed. <em>You learn: the openness that made you feel loved at home is not universally welcomed. Not everyone lives at that temperature.</em>' : e==='cold' ? 'The expression is somewhat effortful — you are doing something the Orderly House didn\'t quite teach. But you reach for it. The words come out more formal than you intended, but they come out. <em>You are practising something new. The awkwardness is the point.</em>' : 'You express the feeling even knowing the response is uncertain. <em>The courage required in an unpredictable world is real. You have it. The expression is genuine and slightly desperate.</em>'}`,
+      patternEcho: (t)=> hasTrait('assert') ? 'The direct bid — learned in the schoolyard, practised at home — arrives here. It is your default tool for closing the gap.' : null
+    },
+    {
+      text: 'You become more pleasing, more available, more of what you think they want',
+      tag: 'appease',
+      outcome: (e,t)=>`You read what they seem to need and move toward it. You soften your edges, amplify what they like, reduce what makes them uncertain. <em>It works, somewhat — they stay, they come a little closer. But what they are drawing closer to is a curated version of you.</em><br><br>${hasTrait('appease') ? '<em>You have been erasing small edges of yourself to maintain connection since you were two years old. The practice is expert now. And the gap between who you are and who you perform is wider than it has ever been.</em>' : 'The self-adjustment is new, or feels new. But the logic is old: adapt, and the connection holds.'}`,
+      patternEcho: (t)=> hasTrait('appease') ? 'The compliance is complete now. In infancy it was behaviour; now it is personality.' : null
+    },
+    {
+      text: 'You withdraw — the uncertainty is too much, the wanting too uncomfortable; you go quiet',
+      tag: 'withdraw_early',
+      outcome: (e,t)=>`The pull is to retreat before the pain becomes larger. To make yourself smaller, needier, less. <em>${hasTrait('withdraw_early') ? 'This is a move of the utmost familiarity. You have been making it since you were months old. The pattern is so established it is no longer a decision — it is weather.' : 'The withdrawal is new in this form, but the instinct behind it is not. You have been practising the inward turn in smaller ways for years.'}</em><br><br>They notice the absence and come slightly closer. Which is interesting. Which teaches you something.`,
+      patternEcho: (t)=> hasTrait('withdraw_early') ? 'You retreat. They follow. The dynamic is now fully established: distance produces pursuit, which produces temporary closeness, which produces anxiety about the closeness, which produces distance. The cycle is just beginning.' : null
+    }
+  ]
+},
+
+// ─────────────────────────────────────────────────────────
+// STAGE 13 — ADOLESCENT CONFLICT WITH AUTHORITY (Age 15–17)
+// ─────────────────────────────────────────────────────────
+{
+  id: 'authority_conflict',
+  stageLabel: ()=>'Adolescence · Age 15–17',
+  stageGroup: 'Adolescence',
+  title: 'Against the Law',
+  text: (e,t)=>`The parental authority — once absolute — is now a target. The adolescent must, to some degree, attack the authority of the parents in order to emerge from under it. This is not rebellion for its own sake; it is a developmental necessity.<br><br>
+${({
+  enmeshed: 'In the Warm House, the rebellion is tinged with guilt — the mother\'s hurt face has always been the most powerful deterrent. You may rebel with one hand and apologise with the other. The separation is happening, but it is agonising.',
+  cold: 'In the Orderly House, the rebellion takes the form of contempt for what your parents value: the controlled competence, the managed emotions, the achievement. You find yourself drawn to the loud, the messy, the feeling. It is the opposite of home, which is exactly the point.',
+  chaotic: 'In the Unpredictable House, rebellion is complicated — you have been managing this unpredictable authority for years, which means you are in some ways more practiced at navigating it. But you are also more exhausted by it. The rebellion, when it comes, may have the quality of release.'
+})[e]}<br><br>
+The superego — the internal version of the parental law — is also in the dock. The voice that says what you should and should not want is being cross-examined.`,
+  insight: { label: 'Psychoanalytic Note', text: 'Adolescent rebellion is the second oedipal moment in miniature: the child must symbolically "kill" the parent — dethrone them from absolute authority — in order to become a subject in their own right. The danger is either insufficient rebellion (the person who never individuates, who remains under the shadow of parental ideals) or excessive rebellion (the person whose identity is constituted entirely by opposition and who is therefore still defined by the parents).' },
+  type: 'choice',
+  prompt: `A conflict with a parent — about your choices, your life, who you are becoming. The old triangle is in the room, but now you are large enough to meet it differently.`,
+  choices: [
+    {
+      text: 'You hold your ground firmly — you insist on your right to make your own choices',
+      tag: 'assert',
+      outcome: (e,t)=>`${e==='enmeshed' ? 'The standoff is painful — the parent\'s hurt is real, and your hurt is real. But you hold. Something unprecedented occurs: you remain separate even under the pressure of love and guilt. <em>This is individuation. It costs. It is worth it.</em>' : e==='cold' ? 'The parent counter-argues, calmly. You argue back. Neither of you shouts. Something is settled: you have a self that can stand in opposition to them and not collapse. <em>The self you have been building is load-bearing.</em>' : 'The standoff risks igniting something larger. You hold anyway — partly because you are old enough to handle what might come, partly because something in you knows this is necessary. <em>The ground holds under you. This is new.</em>'}`,
+      patternEcho: (t)=> hasTrait('assert') ? 'You have been asserting since you were two. Now the assertion is operating in its rightful arena: claiming your own life.' : null
+    },
+    {
+      text: 'You capitulate — it is easier, and some part of you still agrees with them',
+      tag: 'appease',
+      outcome: (e,t)=>`The peace is restored. But something goes slightly flat inside you — the person who exists when the parent isn't looking is further from the person who stood here a moment ago. <em>${hasTrait('appease') ? 'The pattern is so established now that you barely feel it as capitulation. It feels like being reasonable. This is how character crystallises — when the adaptive becomes automatic.' : 'The compliance feels slightly wrong in a way it didn\'t when you were younger. You are becoming aware of it as a pattern.'}</em><br><br>Outside, later, you feel the residue of the unexpressed self. It will look for another exit.`,
+      patternEcho: (t)=> hasTrait('appease') ? 'Every time the self folds to preserve connection, the fold becomes easier and the self becomes quieter. You are expert at this now.' : null
+    },
+    {
+      text: 'You leave — not dramatically, but you stop engaging and become elsewhere in your life',
+      tag: 'withdraw_early',
+      outcome: (e,t)=>`The conflict is resolved by your absence from it. You are increasingly elsewhere — in your friends, your music, your life outside the house — and the parent grows distant by your choice rather than theirs. <em>This is a form of individuation, but a partial one: you have not faced the parent and separated; you have simply moved away. The authority has not been challenged — it has been avoided. It will be waiting for you in other guises.</em>`,
+      patternEcho: (t)=> hasTrait('withdraw_early') ? 'Leaving — emotionally, then physically — has been your signature response to the unbearable. It works. And it leaves things unfinished.' : null
+    }
+  ]
+},
+
+// ─────────────────────────────────────────────────────────
+// STAGE 14 — EARLY ADULTHOOD: LEAVING HOME (Age 18–20)
+// ─────────────────────────────────────────────────────────
+{
+  id: 'leaving_home',
+  stageLabel: ()=>'Early Adulthood · Age 18–20',
+  stageGroup: 'Adult Life',
+  title: 'The Threshold',
+  text: (e,t)=>`You leave. Physically — through a door, with bags, into a new space where no one knows you and no one has expectations about who you are.<br><br>
+The freedom is real. So is the strangeness.<br><br>
+${({
+  enmeshed: '<em>The Warm House recedes behind you — but not entirely.</em> You find yourself calling more often than perhaps you intended to. The voice on the phone is still, somewhat, the centre of your emotional gravity. Independence tastes of exhilaration and guilt in equal measure. What you are learning to do is feel both at once.',
+  cold: '<em>The Orderly House recedes, and you realise, with some surprise, that you miss it less than you expected.</em> The competence you were raised on serves you well in the practical demands of independence. But something else is discovered: you are somewhat at a loss with feelings — yours and others\'. The managed inner life worked at home. Here it produces a strange distance.',
+  chaotic: '<em>The Unpredictable House recedes, and the relief is genuine and slightly startling.</em> For the first time, you can predict the emotional weather, because you are the only one making it. This is both freedom and solitude. You are better at crisis than at calm; more practiced in urgency than in peace.'
+})[e]}`,
+  echo: (t)=>null,
+  insight: { label: 'Psychoanalytic Note', text: 'Leaving home is not the end of the oedipal drama — it is its next chapter. The psychological task is not simply geographical departure but the internal work of separating from the parental figures who have been internalised. The parent inside is often more formidable than the parent at home. The work of early adulthood is largely the renegotiation of these internal relationships.' },
+  type: 'narrative',
+  buttonText: 'Cross the threshold'
+},
+
+// ─────────────────────────────────────────────────────────
+// STAGE 15 — ADULT INTIMACY (Age 22–26)
+// ─────────────────────────────────────────────────────────
+{
+  id: 'adult_intimacy',
+  stageLabel: ()=>'Adulthood · Age 22–26',
+  stageGroup: 'Adult Life',
+  title: 'The Beloved',
+  text: (e,t)=>`You are in a serious relationship. Sustained, complicated, tender, occasionally frightening in its closeness.<br><br>
+Something curious keeps happening: in certain moments — in arguments, in the quality of your longing when they are away, in what you need that they cannot seem to give — <em>you catch a glimpse of something older than this relationship.</em><br><br>
+A pattern. A shape of feeling that seems to predate them entirely. Not always. But sometimes, in the middle of a perfectly ordinary afternoon, you feel a current that is not quite about them — something from further back, moving through the present moment like light through water.`,
+  echo: (t)=>{
+    const dominant = dominantTrait(['protest','secure_wait','withdraw_early','appease','assert']);
+    const map = {
+      protest: { label: 'Pattern at the Surface', text: 'When the closeness is interrupted — when they are unavailable, distracted, uncertain — the urgency rises immediately. The same force that drove the cry, the tantrum, the declaration of desire, the assertion in the schoolyard: it is here. Directed at them. Some of it is about them. Some of it is much older.' },
+      secure_wait: { label: 'Pattern at the Surface', text: 'The trust that was built in the earliest months is here too — the capacity to wait without being destroyed by the waiting, to trust that the gap will close. This is a gift. Your partner feels it as steadiness.' },
+      withdraw_early: { label: 'Pattern at the Surface', text: 'Even in intimacy, some part of you is still poised to retreat. The closeness is both what you want and what you fear — because closeness was never quite safe enough to want fully. You are close, and also slightly absent. They feel both things.' },
+      appease: { label: 'Pattern at the Surface', text: 'You have organized yourself around their needs so thoroughly that they sometimes wonder who you are when they\'re not looking. And so do you. The self that was built on accommodation is capable of great love — but it struggles with the step where it puts its own desires on the table, plainly, and waits.' }
+    };
+    return map[dominant] || null;
+  },
+  insight: { label: 'Psychoanalytic Note', text: 'Adult love is always, to some degree, object relations in translation. We bring to our partners the template built by the earliest figures — the expectations, the hopes, the defenses, the blindspots. What distinguishes a mature love from an immature one is not the absence of transference but the presence of enough consciousness to sometimes see through it — to recognize the ghost behind the face and choose, with that recognition, to love the actual person.' },
+  type: 'choice',
+  prompt: `A recurring argument. Different surface, same shape: you need something from them they struggle to give. The situation is familiar — not from this relationship, but from further back. What do you do?`,
+  choices: [
+    {
+      text: 'Escalate — the feeling is too large, too urgent; it demands to be felt by both of you',
+      tag: 'protest',
+      outcome: (e,t)=>`The argument expands. The feeling is genuine; the proportion may not be. <em>${hasTrait('protest') ? 'You have been making this move — the urgent, full-volume protest — since infancy. It has always produced some result. Here it produces result and damage simultaneously. They receive something that was never entirely meant for them.' : 'The escalation is new but draws on old fuel.'}</em><br><br>Later, in the quiet, you notice the argument had a familiar shape — older than this relationship. <em>This recognition is where change begins, if it begins anywhere.</em>`,
+      patternEcho: (t)=> hasTrait('protest') ? 'Every escalation carries the echo of the first one. The infant who cried until the mother returned is still in the room.' : null
+    },
+    {
+      text: 'Withdraw — you go quiet, manage your feeling privately, create distance',
+      tag: 'withdraw_early',
+      outcome: (e,t)=>`You fold inward. The argument does not happen; neither does the repair. They are left with your absence rather than your feeling. <em>${hasTrait('withdraw_early') ? 'The inward turn is now so fast, so total, that they rarely see what preceded it — the hurt, the need, the wanting. They see only the absence. And the absence is unassailable — you can\'t argue with a wall.' : 'The withdrawal is protective, but it leaves the situation unresolved, to be returned to.'}</em><br><br>Something important is not said. <em>What goes unsaid tends to fester, or to speak in other ways.</em>`,
+      patternEcho: (t)=> hasTrait('withdraw_early') ? 'The wall you built in infancy is fully constructed now. It is real protection and a real prison.' : null
+    },
+    {
+      text: 'Pause — notice the size of the feeling, suspect it belongs partly elsewhere, say something smaller and truer',
+      tag: 'reflect',
+      outcome: (e,t)=>`You pause. Not easily — the feeling is large and wants to move. But you hold it a moment. <em>Something about the shape of this seems older than today.</em><br><br>You say something smaller and more accurate: not the full charge, but the real thing beneath it. They hear it. The conversation that follows is different — less like a replay and more like something that belongs to this relationship, between these two people, today.<br><br><em>The pause is not wisdom yet. But it is the space in which wisdom could live, if practiced.</em> ${hasTrait('reflect') ? 'You are building this capacity, moment by moment. It is not yet habit, but it is becoming one.' : ''}`,
+      patternEcho: (t)=> null
+    },
+    {
+      text: 'Name it directly — state what keeps getting missed and say clearly what you need from them',
+      tag: 'assert',
+      outcome: (e,t)=>`You name it without softening. Not with cruelty — with precision. This is the recurring shape, this is what you need, this is what would help. <em>${hasTrait('assert') ? 'The directness that has always been your instrument is here in the intimate register. It is more exposed than when you use it at work — because the person across from you is someone who could actually disappoint you. But vagueness, circling — that is not in your nature.' : 'The clarity does not come naturally here. But it gives the argument a legible shape, and that is a place to begin.'}</em><br><br>They receive the directness as they can. Something moves.`,
+      patternEcho: (t)=> hasTrait('assert') ? 'The directness you brought to every negotiation and confrontation is here in the bedroom. The form is more tender; the function is the same.' : null
+    },
+    {
+      text: 'Hold — the feeling is real, but the relationship has survived this pattern before; something will find its way',
+      tag: 'secure_wait',
+      outcome: (e,t)=>`You do not escalate, and you do not disappear. You wait — not passively, but with a willingness to stay in contact with both the discomfort and the other person simultaneously. <em>${hasTrait('secure_wait') ? 'The faith built in the first months of your life — that the gap closes, that what is disrupted is not necessarily destroyed — is present here. It does not resolve the argument. It changes the emotional temperature of the room in which the argument exists.' : 'The patience surprises you. It is not your usual register. But the situation calls for it, and you find you have it.'}</em><br><br>By the end of the day something small but real shifts between you.`,
+      patternEcho: (t)=> hasTrait('secure_wait') ? 'The faith that the gap closes — your earliest and most durable finding — is at work here. You are not managing. You are trusting.' : null
+    }
+  ]
+},
+
+// ─────────────────────────────────────────────────────────
+// STAGE 16 — THE PATTERN NAMED (Age 26–30)
+// ─────────────────────────────────────────────────────────
+{
+  id: 'pattern_named',
+  stageLabel: ()=>'Adulthood · Age 26–30',
+  stageGroup: 'Adult Life',
+  title: 'Seeing the Pattern',
+  text: (e,t)=>{
+    const dominant = dominantTrait(['protest','secure_wait','withdraw_early','appease','assert','reflect']);
+    const patternDesc = {
+      protest: 'The urgency. You can name it now: when the gap opens — when someone you love is unavailable, distracted, or uncertain — something in you moves to close it with force. The cry that brought her back. The tantrum. The declaration of desire. The argument. They are all the same gesture, growing more sophisticated with each decade but running on the same engine. It has served you. It has cost you. You are beginning to see both.',
+      secure_wait: 'The faith. You can name it now: a baseline conviction that the other will return, that the gap will close, that absence is not abandonment. It came from the earliest months — the reliable enough return. It has served you more than you know, though you have never had to earn it consciously.',
+      withdraw_early: 'The retreat. You can name it now: when it becomes too much — too close, too uncertain, too large — you go inward. You have been doing this since you were months old. The retreat has many names: self-sufficiency, composure, independence, privacy. All of them are true. None of them are the whole truth.',
+      appease: 'The accommodation. You can name it now: the self that shapes itself around the other, that reads the room before speaking, that folds its own wanting inward to preserve connection. It has made you very good at relationship — at the maintenance of relationship. The question of whether it is truly intimate is another matter.',
+      assert: 'The directness. You can name it now: when you want something, you say so. When something is wrong, you name it. This comes so naturally you have barely noticed it as a pattern — but it is. It can serve you; it can also bulldoze the space where other things might be said.',
+      reflect: 'The pause. You can name it now: the habit — still effortful, still chosen rather than automatic — of stopping between feeling and expression to ask: what is this about? How much of this is now, and how much is then? It is the newest thing in your repertoire. It has been the most expensive to build.'
+    };
+
+    return `Something becomes visible that has always been present but never named.<br><br>
+<em>${patternDesc[dominant] || 'A shape emerges — the signature of your response to difficulty and desire.'}</em><br><br>
+The visibility does not immediately change anything. The pattern is too old, too wired, too practiced to dissolve in a moment of recognition. But recognition is the precondition of choice. Before you can respond differently, you have to notice that you are responding at all — that this is a response, not just reality.<br><br>
+${e==='enmeshed' ? '<em>In the Warm House, love and loss of self were always close together. The pattern you built may have kept you connected — but at the cost of you. The question going forward is: can you be loved as your whole self, and can you offer love from your whole self, rather than from the self that has shaped itself around what love required?</em>' : e==='cold' ? '<em>In the Orderly House, competence was the currency and feeling was the surplus. The pattern you built may have made you capable — but at the cost of access to your inner life. The question going forward is: can you be known, not just functional? Can you let someone in to where the feeling is?</em>' : '<em>In the Unpredictable House, the pattern was a form of survival. You became expert in the emotional weather of others, at the expense of confidence in your own ground. The question going forward is: can you trust the ground under you, when you are not managing someone else\'s instability?</em>'}`;
+  },
+  insight: { label: 'Psychoanalytic Note', text: '"Making the unconscious conscious" — Freud\'s original description of the therapeutic task — is less about revelation than about recognition. The moment of seeing the pattern is not a cure; it is an opening. Character does not change overnight. But something shifts when we can name what we are doing while we are doing it — when the automatic becomes slightly, incrementally, deliberate.' },
+  type: 'narrative',
+  buttonText: 'Carry the knowledge forward'
+},
+
+// ─────────────────────────────────────────────────────────
+// STAGE 17 — WORK AND AUTHORITY (Age 28–35)
+// ─────────────────────────────────────────────────────────
+{
+  id: 'work_authority',
+  stageLabel: ()=>'Adulthood · Age 28–35',
+  stageGroup: 'Adult Life',
+  title: 'The Boss',
+  text: (e,t)=>`Your boss — your supervisor, your superior, whoever sits above you in whatever structure you inhabit — is not your father.<br><br>
+You know this. And yet.<br><br>
+The relationship has a familiar current. The way you feel when they criticise your work. The way you position yourself to be noticed or to avoid notice. The degree to which their approval matters in a way that seems out of proportion to the professional stakes.<br><br>
+The oedipal drama has followed you to work. Of course it has. It follows everyone.`,
+  echo: (t)=>{
+    const dominant = dominantTrait(['protest','appease','assert','withdraw_early','identify','ambivalent']);
+    const map = {
+      protest: { label: 'Pattern at the Surface', text: 'Criticism from authority still hits harder than you expect. The urgency to correct it, to re-establish your standing, to close the gap between how they see you and how you want to be seen — familiar.' },
+      appease: { label: 'Pattern at the Surface', text: 'You have oriented yourself toward what the boss wants, sometimes before you have considered what you want. The accommodation is practiced. You are useful to them. The cost is that your own direction is somewhat unclear.' },
+      assert: { label: 'Pattern at the Surface', text: 'You have opinions about how things should be done, and you express them. This makes you valuable. It also, sometimes, makes you a problem. The same directness that served you in the schoolyard, in relationships, is here.' },
+      withdraw_early: { label: 'Pattern at the Surface', text: 'When the authority figure becomes difficult, your instinct is to reduce your visibility — to do the work quietly, avoid notice, not require anything of them. It is safe. It is also invisible.' },
+      identify: { label: 'Pattern at the Surface', text: 'You have found something to admire in this person — genuinely. The same turn you made toward your father is here: rivalry sublimated into aspiration. You want to do what they do. You want to be trusted with what they\'re trusted with.' }
+    };
+    return map[dominant] || null;
+  },
+  insight: { label: 'Psychoanalytic Note', text: 'The workplace is an oedipal field. The boss carries the projection of the father: the authority, the model, the rival. Colleagues carry projections of siblings. Clients and customers carry projections of needy, demanding, or gratifying children. Organizational life is never purely rational — it runs on these invisible currents, which is why the same person can be competent in one structure and dysfunctional in another.' },
+  type: 'choice',
+  prompt: `Your boss has passed you over for a project you wanted — it went to a colleague who is less senior but, you suspect, more liked. The old current runs.`,
+  choices: [
+    {
+      text: 'You request a direct conversation — ask clearly why the decision was made and what you need to do differently',
+      tag: 'assert',
+      outcome: (e,t)=>`The conversation is uncomfortable and useful. You learn something about how you are perceived — not everything you wanted to hear, some things that are genuinely helpful. <em>${hasTrait('assert') ? 'The directness that has characterised your approach since early childhood is producing results in the world. The boss respects the bid, even if the answer is not what you wanted.' : 'The directness is slightly new in this context, but you reach for it. The fact that it is slightly effortful makes it slightly more real.'}</em>`,
+      patternEcho: (t)=> hasTrait('assert') ? 'Direct bid, direct information. You have been running this play for twenty years.' : null
+    },
+    {
+      text: 'You work harder, do more, angle to make your value undeniable',
+      tag: 'identify',
+      outcome: (e,t)=>`The response is to out-earn the slight through performance. <em>${hasTrait('identify') ? 'The aspiration engine — which has been running since you first watched your father working and wanted to become him — revs up. The rivalry is metabolised into effort. This is sophisticated and it usually works.' : 'The competitive instinct turns inward, becomes productivity. It is not the most direct response, but it produces something.'}</em><br><br>Three months later, the next project is yours. The boss mentions your name with something adjacent to admiration.`,
+      patternEcho: (t)=> hasTrait('identify') ? 'The rival-to-model move — your oldest and most reliable transformation of difficult feeling — is running perfectly.' : null
+    },
+    {
+      text: 'You withdraw — mentally, emotionally. You do the work, but your investment decreases',
+      tag: 'withdraw_early',
+      outcome: (e,t)=>`The reduction of investment is protective. You stop wanting the thing you don\'t have, which stops the wanting from hurting. <em>${hasTrait('withdraw_early') ? 'The inward turn has been your signature since infancy. Here it looks like professionalism. But the disengagement is real — and the boss, who is not unintelligent, begins to notice the slight flatness.' : 'The retreat is a version of self-protection. It works in the sense that it stops the pain. It costs something that is harder to quantify.'}</em>`,
+      patternEcho: (t)=> hasTrait('withdraw_early') ? 'You reduce. You manage. You survive the slight by making yourself need the thing less. The pattern is fully automatic now.' : null
+    },
+    {
+      text: 'You say something — to a trusted colleague, or to the boss directly — because the silence feels dishonest',
+      tag: 'protest',
+      outcome: (e,t)=>`The feeling comes out. Not perfectly, not without some aftermath — but the thing that was building inside is no longer entirely inside. <em>${hasTrait('protest') ? 'The urgency that has been your instrument since the first absence finds professional clothing here. It still has the same texture: the need to close the gap between what is and what should be.' : 'The expression is unfamiliar in this context. But something was said that was real, and saying real things in professional spaces costs something and gives something in roughly equal measure.'}</em>`,
+      patternEcho: (t)=> hasTrait('protest') ? 'The gap, the grievance, the voice that names it — the same sequence it has always been.' : null
+    },
+    {
+      text: 'You pause with it — notice what the slight actually touches, what older territory it is crossing',
+      tag: 'reflect',
+      outcome: (e,t)=>`You sit with the sting rather than acting on it immediately. <em>Something about the size of the feeling is information.</em> This is not just about the project — there is something older here, a current that was running before you arrived at this desk, in this building, in this particular relationship with this particular authority figure.<br><br>The recognition does not dissolve the feeling. But it puts the feeling in its proper frame — which makes it manageable, and makes the next move more likely to belong to today rather than to then.`,
+      patternEcho: (t)=> hasTrait('reflect') ? 'The habit of watching the feeling before acting on it is available here. It has earned this moment.' : null
+    },
+    {
+      text: 'You hold — your record is real, the work is real; the tide will turn in its own time',
+      tag: 'secure_wait',
+      outcome: (e,t)=>`You absorb the setback without catastrophising. It stings — of course it stings — but underneath the sting is a conviction that outlasts it: you have done good work, and good work is not lost. <em>${hasTrait('secure_wait') ? 'The faith that the gap closes, that absence is not abandonment, has migrated intact into professional life. It gives you a patience that other people in the room do not always have.' : 'The equanimity surprises you slightly. It holds.'}</em><br><br>Six months later, the opportunity comes. You were ready.`,
+      patternEcho: (t)=> hasTrait('secure_wait') ? 'The trust that the world is, on balance, fair to patient work — your oldest inheritance — steadies you here.' : null
+    }
+  ]
+},
+
+// ─────────────────────────────────────────────────────────
+// STAGE 18 — MID-LIFE / THE PATTERN TESTED (Age 35–42)
+// ─────────────────────────────────────────────────────────
+{
+  id: 'midlife',
+  stageLabel: ()=>'Mid-Life · Age 35–42',
+  stageGroup: 'Mid-Life',
+  title: 'The Pattern Under Pressure',
+  text: (e,t)=>`Something happens in mid-life — it is not always a crisis, but it is always a reckoning.<br><br>
+The strategies that carried you here begin to show their seams. The default — the one built in the first years of life and refined across every subsequent decade — is still working. And it is also, in some place you have been successfully ignoring, costing you.<br><br>
+${({
+  enmeshed: 'If you came from the Warm House and built yourself around closeness and connection, you may find that you have given so much of yourself to others that you have lost the thread back to what you actually want — what you want, not what they need.',
+  cold: 'If you came from the Orderly House and built yourself around competence and control, you may find that you are effective in everything and moved by nothing — that the managed inner life has become a kind of numbness, and that something real has been waiting quietly for permission to speak.',
+  chaotic: 'If you came from the Unpredictable House and built yourself around vigilance and adaptation, you may find that you are exhausted — that the hypervigilance which kept you safe has never stopped running, even when the emergency is over, and that you don\'t quite know how to be at rest.'
+})[e]}<br><br>
+The question mid-life poses is not "who am I" — you are past that. The question is: <em>is who I became still who I want to be?</em>`,
+  insight: { label: 'Psychoanalytic Note', text: 'Mid-life is what Jungians call the "afternoon of life" — the period when the adaptations that served the first half become insufficient for the second. The defenses that were protective become restrictive. The character that was a solution becomes a problem. This is not pathology — it is development. But it requires a willingness to mourn what was built in order to build something different.' },
+  type: 'choice',
+  prompt: `Something arrives — a loss, a limitation, a silence that can no longer be filled with activity — that puts the default pattern directly in your path. You cannot go around it. You have to decide what to do.`,
+  choices: [
+    {
+      text: 'You go into it — allow the feeling fully, let the pattern be visible, let yourself be moved',
+      tag: 'reflect',
+      outcome: (e,t)=>`The feeling is larger than you expected. There is grief in it — not just for what you have lost now, but for older losses, the ones the pattern was built to protect you from.<br><br><em>Something gives way.</em> Not everything — not the whole structure — but something. A room opens that has been locked for a long time. What is in it is not catastrophic. It is just: you. The unaccommodated, unmanaged, wanting version of you that the default was designed to protect.<br><br>The work of integration begins here. It is slow. But it has begun.`,
+      patternEcho: (t)=> hasTrait('reflect') ? 'You have been practising the pause for years. Here, it pays its largest dividend yet.' : null
+    },
+    {
+      text: 'You intensify the pattern — more of what has always worked, applied with greater force',
+      tag: 'intensify',
+      outcome: (e,t)=>{
+        const dominant = dominantTrait(['protest','appease','assert','withdraw_early']);
+        const map = {
+          protest: 'You become louder — more urgent, more demanding of others\' presence and attention. The relationships that can bear this weight hold; some that cannot begin to bow. The pattern is running at full power.',
+          appease: 'You give more, accommodate more, reduce yourself further. The people in your life sense something slightly hollow in the generosity — as if the person offering it has temporarily left the building.',
+          assert: 'You drive harder — in work, in relationships, in the positions you hold. The assertion is powerful but slightly breathless. You are running from something by running toward achievement.',
+          withdraw_early: 'The withdrawal deepens. You are present in all the external senses — at the table, at the desk, in the room — but absent in the way that people who know you well can feel.'
+        };
+        return `<em>${map[dominant] || 'The default intensifies. The strategy that built your life is applied with full force to a problem it was not designed to solve.'}</em><br><br>It works, partially. Enough to avoid the reckoning for a little longer. The reckoning is patient.`;
+      },
+      patternEcho: (t)=> null
+    },
+    {
+      text: 'You seek help — therapy, a trusted person, something outside the usual defenses',
+      tag: 'reflect',
+      outcome: (e,t)=>`You reach outside the pattern for the first time in a long time. <em>This is not weakness — it is the recognition that the pattern alone is insufficient.</em><br><br>What happens in this help-seeking is slow and often uncomfortable. The things that come up are not new — they are old, in new light. The default becomes visible from the outside, which is the only place it can truly be seen.<br><br>You begin, slowly, to have a relationship with your own character rather than simply living inside it. <em>This is what analysis — in any form — is actually for.</em>`,
+      patternEcho: (t)=> null
+    },
+    {
+      text: 'You name it and move — you see clearly what needs to change and you begin changing it',
+      tag: 'assert',
+      outcome: (e,t)=>`The directness that has characterised your life turns inward. You see the thing that is costing you — the strategy that built your life and is now limiting it — and you make a decision. Not a therapy decision, not a waiting decision: a choice. <em>${hasTrait('assert') ? 'The same will that carried you through every confrontation and negotiation now turns on the problem of yourself. This is the most demanding application of that will. It also has the highest stakes.' : 'The clarity arrives and you act on it. The action is imperfect. But it is a beginning.'}</em>`,
+      patternEcho: (t)=> hasTrait('assert') ? 'The directness that was always your first move is here in its most important deployment: toward your own life.' : null
+    },
+    {
+      text: 'You go quiet — step back from the demands, create interior space, let things settle',
+      tag: 'withdraw_early',
+      outcome: (e,t)=>`You reduce external commitments. You become less available. You create, deliberately, the space that the pattern has always sought in less deliberate ways. <em>${hasTrait('withdraw_early') ? 'The inward turn — which has always been your instinct — is here chosen rather than automatic. That difference matters. You are using the pattern rather than being used by it.' : 'The withdrawal is slightly unfamiliar as an intentional act. But it gives you something: a room that is yours, with no one requiring anything inside it.'}</em>`,
+      patternEcho: (t)=> hasTrait('withdraw_early') ? 'The retreat, this time, is chosen. That changes what it is.' : null
+    },
+    {
+      text: 'You hold — sit with the discomfort without acting, trust that something will clarify',
+      tag: 'secure_wait',
+      outcome: (e,t)=>`You do not act. You wait. Not from paralysis — from a trust, deep and practised, that the situation will resolve itself if you do not force it. <em>${hasTrait('secure_wait') ? 'The faith that has been the bass note of your life — that the gap closes, that what is unclear will become clear, that the world is, on balance, reliable — is at its most demanding here. Mid-life is not a problem to be solved. You are learning it is something to be lived through.' : 'The patience is harder than it looks. But it is real.'}</em>`,
+      patternEcho: (t)=> hasTrait('secure_wait') ? 'The waiting that was your earliest and most durable finding applies here, in the largest room it has yet been asked to hold.' : null
+    }
+  ]
+},
+
+// ─────────────────────────────────────────────────────────
+// STAGE 19 — PARENTHOOD (Age 32–40)
+// ─────────────────────────────────────────────────────────
+{
+  id: 'parenthood',
+  stageLabel: ()=>'Adulthood · Parenthood',
+  stageGroup: 'The Cycle',
+  title: 'The Stage Changes Hands',
+  text: (e,t)=>`You are a parent now. Or you hold someone small in your care who depends on you entirely.<br><br>
+The drama appears from the other side.<br><br>
+You watch them — this small person — and you recognise everything. The way they look at you. The intensity of their wanting. The way your presence organises their world and your absence disorganises it. The triangle that is forming as they become aware of the other parent. The desire, undisguised, total, that children carry before they learn to manage it.<br><br>
+And you notice something else: you are <em>in</em> the drama now, as one of its major figures. How you respond to their desire — their reaching toward you, their exclusion of the other, their small rages and declarations — is already shaping what they will carry.`,
+  echo: (t)=>{
+    const dominant = dominantTrait(['protest','secure_wait','withdraw_early','appease','assert','reflect']);
+    const map = {
+      protest: { label: 'Pattern Passing On', text: 'Your child\'s intensity meets yours. The urgency in them is familiar — possibly too familiar. Something is at risk of amplifying rather than metabolising. The work is to be moved by their feeling without being overwhelmed, to receive the cry without having your own.' },
+      secure_wait: { label: 'Pattern Passing On', text: 'Your steadiness is a gift to them — the reliability, the warmth. There is a risk, small but real, of being so reliable that they never quite learn that absences are survivable. The "good enough" requires some gap.' },
+      withdraw_early: { label: 'Pattern Passing On', text: 'Your child reaches toward you with full intensity. Something in you wants to step back from the intensity — to maintain some distance. This is your default, and children feel it. The work is to remain present even when presence feels overwhelming.' },
+      appease: { label: 'Pattern Passing On', text: 'You want to give them everything they need. And you are in danger of giving them too much — of never introducing the frustration that teaches that desire is not omnipotent, that the world has structure, that "not everything can be had" is a gift rather than a punishment.' },
+      reflect: { label: 'Pattern Passing On', text: 'The capacity to observe your own responses — to notice when their intensity is triggering something old in you — is your most valuable parenting tool. Not perfect. But present.' }
+    };
+    return map[dominant] || null;
+  },
+  insight: { label: 'Psychoanalytic Note', text: '"Parents lend their children the ego they are not yet equipped to use," wrote Winnicott. The parent\'s task is not to be perfect but to be, in Winnicott\'s phrase, "good enough" — present enough to provide security, fallible enough to provide the friction that develops the child\'s capacity to self-regulate. The parent who never frustrates produces a child who cannot bear frustration. The parent who always frustrates produces a child who cannot trust. The work is in the range.' },
+  type: 'choice',
+  prompt: `Your child is angry with you — genuinely, expressively angry — because you have said no to something they wanted. The full force of their feeling is directed at you.`,
+  choices: [
+    {
+      text: 'You receive it — hold the limit and hold the relationship, even with their anger in the room',
+      tag: 'parent_law',
+      outcome: (e,t)=>`The anger is real. You feel the pull to give in, or to become authoritarian, or to leave the room — all versions of your own defaults. But you do neither. You hold.<br><br>You say: <em>"I can see you are very angry. You can be angry. The answer is still no."</em><br><br>This sentence — both things at once — is one of the most important sentences in development. It says: your feeling is real; reality is also real. Both of these can be true simultaneously.<br><br><em>They learn this. It will serve them for the rest of their life.</em>`,
+      patternEcho: (t)=> hasTrait('reflect') ? 'The pause that you have been building for years is here, in its most important use. You are consciously not doing your default — and something better is happening instead.' : null
+    },
+    {
+      text: 'You give in — the anger is too much, the limit dissolves',
+      tag: 'parent_lost',
+      outcome: (e,t)=>`The anger works. The limit gives way. They get what they wanted, and something is satisfied — in both of you, if you are honest.<br><br><em>But something else is registered, in both of you.</em> They learn: feeling applied with sufficient intensity produces results. The frustration that would have taught that desire is not omnipotent has been cancelled. <em>${hasTrait('appease') ? 'Your accommodation — which has been your signature — is now being transmitted. The self that could not hold its own limits is now unable to hold limits for another.' : 'The capitulation has costs that are not immediately visible.'}</em>`,
+      patternEcho: (t)=> hasTrait('appease') ? 'Every time you fold to preserve peace, the message is transmitted: this is how people relate. Your child is learning your pattern.' : null
+    },
+    {
+      text: 'You withdraw — you leave the room, you go somewhere until it has passed',
+      tag: 'parent_lost',
+      outcome: (e,t)=>`The anger is unmanageable, so you manage it by removing yourself from it. When you return, the storm has passed. But something lingers — a slight distance, a sense that the large feeling was too large to be held.<br><br><em>${hasTrait('withdraw_early') ? 'You are passing on, without choosing to, the lesson that very big feelings cannot be held by another person — that the appropriate response to overwhelming feeling is to be alone with it.' : 'The withdrawal communicates something you did not intend to communicate.'}</em><br><br>Your child will learn that their most intense feelings push people away. <em>This is not what you wanted to teach.</em>`,
+      patternEcho: (t)=> hasTrait('withdraw_early') ? 'The retreat that began in infancy is now a parenting style. The pattern completes its generational circuit.' : null
+    },
+    {
+      text: 'You move toward them — hold them, let the anger exist within the warmth rather than against it',
+      tag: 'parent_warm',
+      outcome: (e,t)=>`You do not argue. You do not give in. You go toward them. You hold the child — or stay close — while the anger is still present, while the feeling has not yet resolved. <em>The limit stands. And you are still here. Both things at once.</em><br><br>This is one of the rarest and most valuable things a parent can offer: the demonstration that anger does not destroy love, that the relationship survives the feeling, that there is no feeling large enough to make you leave.<br><br><em>${hasTrait('secure_wait') ? 'The faith that closeness survives disruption — which was laid down in you so early — is now being laid down in them. You are passing on what you were given.' : 'This does not come easily. But something in you knows it is right, and you hold.'}</em>`,
+      patternEcho: (t)=> hasTrait('secure_wait') ? 'The earliest thing you were given — the reliable return, the gap that always closed — you are now giving it.' : null
+    },
+    {
+      text: 'Your own feeling rises — their anger activates something in you that does not entirely belong to this moment',
+      tag: 'protest',
+      outcome: (e,t)=>`Their anger meets your anger. Not by design — something in the intensity of their feeling activates something old in yours. The argument escalates briefly beyond what the situation required. <em>${hasTrait('protest') ? 'The urgency that has been your default since the first absence is at work here, and it is meeting its match. There is something to be learned in this — about the cost of the pattern, about what gets transmitted, about where the work is.' : 'The activation surprises you. The feeling belonged to both of you, and to neither of you entirely.'}</em><br><br>Later, in the quiet, you repair with them. The repair matters. <em>Children need to see repair as much as they need to see limits.</em>`,
+      patternEcho: (t)=> hasTrait('protest') ? 'Two urgencies meeting each other. The echo is exact and uncomfortable and instructive.' : null
+    },
+    {
+      text: 'You observe yourself — notice your own response activating, pause before it carries you',
+      tag: 'reflect',
+      outcome: (e,t)=>`You catch it — the pull to give in, the pull to escalate, the pull to leave. You catch it because you have been practising catching things, and the catching is quicker now than it used to be.<br><br>You stay. You hold the limit. You stay warm. It is not elegant. But it is present.<br><br><em>${hasTrait('reflect') ? 'The observing capacity that has cost you so much to build is here in its most important application. Not observation for its own sake — observation in service of showing up differently than your default.' : 'The pause between stimulus and response is narrow. But it is there, and you are using it.'}</em>`,
+      patternEcho: (t)=> hasTrait('reflect') ? 'The pause that was built across a lifetime is now a parenting tool. This is what it was for.' : null
+    }
+  ]
+},
+
+// ─────────────────────────────────────────────────────────
+// STAGE 20 — LOOKING BACK (Age 45–55)
+// ─────────────────────────────────────────────────────────
+{
+  id: 'looking_back',
+  stageLabel: ()=>'Mid-Life · Age 45–55',
+  stageGroup: 'Integration',
+  title: 'What Was Made of It',
+  text: (e,t)=>{
+    const dominant = dominantTrait(['protest','secure_wait','withdraw_early','appease','assert','reflect','identify']);
+    const reflectCount = traitCount('reflect');
+
+    return `You are looking back now — not to dwell, but because the view from here is different from the view inside.<br><br>
+You can see the arc of it: the early environment, the first solutions, the defaults that formed, the ways they travelled through school and love and work and parenthood, refining themselves, becoming more sophisticated, occasionally becoming visible enough to choose.<br><br>
+${reflectCount >= 2
+  ? 'You have had some practice at stepping outside the pattern — at seeing it while it was running. This is not a cure. But it has created, in some places, a little more room. A little more light. The automatic has become, in moments, slightly deliberate.'
+  : reflectCount === 1
+  ? 'You have touched, at least once, the edge of seeing the pattern from outside it. It is not yet a habit. But the contact has happened, and contact leaves traces.'
+  : 'The pattern has run largely unchallenged — not because you are without consciousness, but because the defaults are so woven into who you are that the seams have become invisible. There is still time. There is always still time.'
+}<br><br>
+<em>${({
+  enmeshed: 'What the Warm House gave you: the capacity for warmth, closeness, attunement. What it cost: some clarity about where you end and others begin. The work — if there is more work — is the recovery of the separate self, without the loss of the warmth.',
+  cold: 'What the Orderly House gave you: competence, reliability, structure. What it cost: some easy access to your inner life, some fluency in the language of feeling. The work — if there is more work — is the recovery of what was managed away.',
+  chaotic: 'What the Unpredictable House gave you: resilience, emotional intelligence, the ability to read a room. What it cost: some confidence in stillness, some ability to trust the ground when it is not moving. The work — if there is more work — is learning to rest.'
+})[e]}</em>`;
+  },
+  insight: { label: 'Psychoanalytic Note', text: 'The goal of psychoanalysis is not the elimination of the past but its integration. "Where id was, ego shall be" — Freud\'s famous formulation — means: where something was driven by unconscious forces, bring the light of awareness. This does not make the unconscious disappear; it makes its products more available to choice. The past is not overcome; it is inhabited more consciously.' },
+  type: 'narrative',
+  buttonText: 'The curtain descends'
+},
+
+// ─────────────────────────────────────────────────────────
+// STAGE 21 — FINALE
+// ─────────────────────────────────────────────────────────
+{
+  id: 'finale',
+  stageLabel: ()=>'Integration',
+  stageGroup: 'Resolution',
+  title: 'What You Carry',
+  text: (e,t)=>`The curtain does not fall on the inner theatre. It never does, entirely. The drama continues — in dreams, in the texture of your relationships, in what moves you without knowing why, in the kinds of love that feel possible and the kinds that remain just out of reach.<br><br>
+But you have moved through it. You arrived as sensation — pure, undivided, pre-verbal. You were held, and frustrated, and mirrored, and sometimes misread. You desired what you could not have, and learned, slowly, that this prohibition was not punishment but structure — the architecture that made desire possible in the first place.<br><br>
+You identified with your rivals. You displaced your first loves. You brought your defaults to the schoolyard, to the workplace, to the bedroom, to the crib of your own child. At each stop, the pattern ran — and at some stops, you noticed it running.<br><br>
+<em>That noticing — however partial, however late — is what makes you not merely the product of your history, but also, in some degree, its author.</em><br><br>
+The theatre rests. The players breathe. Somewhere, a child is being born into a warm face or a cool one, a reliable presence or an uncertain one — and is beginning, right now, to build their first solution to the oldest problem.<br><br>
+<em>The complex does not end. It cycles. Each generation has the chance to play it a little more consciously than the last.</em>`,
+  insight: {
+    label: 'Freud\'s Final Word',
+    text: '"One day, looking back, I shall be able to see what these years were for." The Oedipus complex is not a wound to be healed. It is the scar that made us human: social, symbolic, capable of love and rivalry and culture, and forever reaching beyond what we can hold.'
+  },
+  type: 'end'
+}
+
+]; // end stages
+} // end buildStages
+
+// ═══════════════════════════════════════════════════════════
+// RENDERING ENGINE
+// ═══════════════════════════════════════════════════════════
+
+function showEnvSelect() {
+  document.getElementById('title-screen').style.display = 'none';
+  document.getElementById('env-screen').classList.remove('hidden');
+}
+
+function selectEnv(envKey) {
+  env = envKey;
+  stageList = buildStages();
+  document.getElementById('env-screen').classList.add('hidden');
+  document.getElementById('game-header').classList.remove('hidden');
+  document.getElementById('trait-panel').classList.remove('hidden');
+  document.getElementById('game-scene').classList.remove('hidden');
+  window.scrollTo({ top: 0 });
+  startMusic();
+  renderStage(0);
+}
+
+// ── MUSIC ────────────────────────────────────────────────────
+let musicMuted = false;
+function startMusic() {
+  const audio = document.getElementById('bg-music');
+  if (!audio) return;
+  audio.volume = 0.45;
+  audio.play().catch(() => {}); // autoplay policy: silently ignore if blocked
+}
+function toggleMute() {
+  const audio = document.getElementById('bg-music');
+  const btn   = document.getElementById('mute-btn');
+  if (!audio) return;
+  musicMuted = !musicMuted;
+  audio.muted = musicMuted;
+  btn.textContent = musicMuted ? '♪' : '♫';
+  btn.style.opacity = musicMuted ? '0.4' : '1';
+}
+
+// ── GROOVE SYSTEM ──────────────────────────────────────────
+// Maps each choice tag to its "family" — tags in the same
+// family share groove score.
+const GROOVE_FAMILIES = {
+  protest:        'protest',
+  secure_wait:    'secure',
+  withdraw_early: 'avoidant',
+  appease:        'avoidant',
+  assert:         'assertive',
+  identify:       'assertive',
+  ambivalent:     'avoidant',
+  desire_rage:    'protest',
+  desire_grief:   'secure',
+  desire_redirect:'assertive',
+  reflect:        'reflective',
+  repair:         'secure',
+  parent_law:     'assertive',
+  parent_lost:    'avoidant',
+  parent_warm:    'secure',
+  intensify:      'protest',
+};
+
+// Returns total groove score for a given family
+function familyScore(family) {
+  let score = 0;
+  for (const [tag, fam] of Object.entries(GROOVE_FAMILIES)) {
+    if (fam === family) score += (traits[tag] || 0);
+  }
+  return score;
+}
+
+// Returns the dominant family
+function dominantFamily() {
+  const families = ['protest','secure','avoidant','assertive','reflective'];
+  return families.reduce((a, b) => familyScore(a) >= familyScore(b) ? a : b);
+}
+
+// Returns groove class for a choice given its tag
+// grooveDepth: total choices made so far (stages completed)
+function getGrooveClass(choiceTag, grooveDepth) {
+  if (grooveDepth < 2) return ''; // too early for groove to show
+
+  const dom = dominantFamily();
+  const choiceFamily = GROOVE_FAMILIES[choiceTag] || choiceTag;
+  const domScore = familyScore(dom);
+  const choiceScore = familyScore(choiceFamily);
+  const gap = domScore - choiceScore; // how far from dominant
+
+  if (choiceFamily === dom) {
+    return domScore >= 3 ? 'groove-dominant' : '';
+  }
+
+  // Scale fade by both gap and depth
+  const fadeFactor = Math.floor(gap * (grooveDepth / 4));
+
+  if (fadeFactor <= 0) return '';
+  if (fadeFactor === 1) return 'groove-flicker';
+  if (fadeFactor === 2) return 'groove-scramble';
+  return 'groove-burn'; // calcified — burns to ghost
+}
+
+// ── GROOVE ANIMATION SYSTEM ──────────────────────────────────────────────────
+const GLITCH_CHARS = '░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘█▄▌▐▀αßΓπΣσµτΦΘΩδε∩≡±≥≤÷≈°√ⁿ²·';
+const activeScrambles = new Map(); // btn element → interval id
+const GHOST_PHRASES = [
+  "Another way surfaced — then dissolved.",
+  "You sensed a different path. It slipped away.",
+  "A thought briefly clarified — then the groove took hold.",
+  "Something in you almost chose this. Almost.",
+  "The other road appeared for a moment, then the familiar closed over it.",
+];
+
+function startScramble(btn) {
+  if (activeScrambles.has(btn)) return;
+  const rawText = btn.dataset.raw || btn.textContent;
+  const prefixHtml = btn.dataset.prefixHtml || '';
+  const id = setInterval(() => {
+    const scrambled = rawText.split('').map(ch => {
+      if (ch === ' ' || Math.random() > 0.38) return ch;
+      return GLITCH_CHARS[Math.floor(Math.random() * GLITCH_CHARS.length)];
+    }).join('');
+    btn.innerHTML = prefixHtml + scrambled;
+  }, 115);
+  activeScrambles.set(btn, id);
+}
+
+function clearAllScrambles() {
+  activeScrambles.forEach((id, btn) => {
+    clearInterval(id);
+    if (btn.dataset.raw) btn.innerHTML = (btn.dataset.prefixHtml || '') + btn.dataset.raw;
+  });
+  activeScrambles.clear();
+}
+
+function initGrooveEffects() {
+  // Start text scramble on groove-scramble buttons
+  document.querySelectorAll('.choice-btn.groove-scramble').forEach(btn => startScramble(btn));
+
+  // Burn sequence on groove-burn buttons (brief visibility → burn → ghost)
+  document.querySelectorAll('.choice-btn.groove-burn').forEach((btn, i) => {
+    const delay = 950 + i * 280;
+    setTimeout(() => {
+      if (!btn.parentNode) return;
+      btn.classList.add('groove-burning');
+      setTimeout(() => {
+        if (!btn.parentNode) return;
+        const ghost = document.createElement('div');
+        ghost.className = 'groove-ghost';
+        ghost.textContent = GHOST_PHRASES[Math.floor(Math.random() * GHOST_PHRASES.length)];
+        btn.parentNode.replaceChild(ghost, btn);
+      }, 1750);
+    }, delay);
+  });
+}
+
+// Subtle text morphing: adds a prefix phrase that makes
+// against-grain choices feel slightly foreign/effortful
+const AGAINST_GRAIN_PREFIXES = {
+  protest:    ["Something unfamiliar stirs — ", "Against every instinct — ", "This feels wrong, and yet — "],
+  avoidant:   ["It would be easier to disappear, but — ", "Something in you resists the retreat — ", "You stay when you want to go — "],
+  assertive:  ["The words do not come naturally — ", "You reach for something you do not usually use — ", "Quieter than you usually move — "],
+  reflective: ["For once — ", "Something slows — ", "A pause, uncharacteristic — "],
+  secure:     ["With more trust than you feel — ", "Borrowing a patience not yet fully yours — ", ""],
+};
+
+function getAgainstGrainPrefix(choiceTag, grooveDepth) {
+  if (grooveDepth < 3) return null;
+  const dom = dominantFamily();
+  const choiceFamily = GROOVE_FAMILIES[choiceTag] || choiceTag;
+  if (choiceFamily === dom) return null;
+  const domScore = familyScore(dom);
+  const gap = domScore - familyScore(choiceFamily);
+  if (gap < 2) return null;
+  const prefixes = AGAINST_GRAIN_PREFIXES[choiceFamily] || [];
+  if (!prefixes.length) return null;
+  return prefixes[Math.floor(Math.random() * prefixes.length)];
+}
+
+// ── RENDER ─────────────────────────────────────────────────
+
+function renderStage(idx) {
+  const stage = stageList[idx];
+  if (!stage) return;
+  stageIndex = idx;
+
+  document.getElementById('stage-indicator').textContent =
+    typeof stage.stageGroup === 'function' ? stage.stageGroup(env) : stage.stageGroup;
+
+  const pct = Math.round((idx / (stageList.length - 1)) * 100);
+  document.getElementById('psyche-fill').style.width = pct + '%';
+  document.getElementById('progress-label').textContent = `${idx + 1} / ${stageList.length}`;
+
+  const ageLabel = typeof stage.stageLabel === 'function' ? stage.stageLabel(env) : (stage.stageLabel||'');
+  const title    = typeof stage.title === 'function' ? stage.title(env, traits) : stage.title;
+  const text     = typeof stage.text  === 'function' ? stage.text(env, traits) : stage.text;
+  const insight  = stage.insight ? (typeof stage.insight === 'function' ? stage.insight(env, traits) : stage.insight) : null;
+  const echo     = stage.echo ? stage.echo(traits) : null;
+
+  // Count how many choice-stages have been completed
+  const grooveDepth = Object.keys(choiceHistory).length;
+
+  let html = `
+    <div class="age-label">${ageLabel}</div>
+    <div class="scene-title">${title}</div>
+    <div class="scene-text">${text}</div>
+  `;
+
+  if (echo) {
+    html += `<div class="echo-box"><div class="echo-label">${echo.label}</div><div class="echo-text">${echo.text}</div></div>`;
+  }
+  if (insight) {
+    html += `<details class="insight-box"><summary class="insight-summary"><span class="insight-label">${insight.label}</span><span class="insight-caret">▶</span></summary><div class="insight-text">${insight.text}</div></details>`;
+  }
+
+  if (stage.type === 'choice') {
+    const prompt = typeof stage.prompt === 'function' ? stage.prompt(env, traits) : stage.prompt;
+    html += `<div class="scene-text" style="color:var(--aged);font-style:italic;margin-top:6px;">${prompt}</div>`;
+    html += `<div class="choices-area" id="choices-area">`;
+
+    // Compute groove classes, then guarantee at least one choice is always clickable
+    const choiceClasses = stage.choices.map(c => getGrooveClass(c.tag, grooveDepth));
+    const hasClickable = choiceClasses.some(gc => gc !== 'groove-burn');
+    if (!hasClickable && choiceClasses.length > 0) {
+      // Find the choice whose family is closest to the dominant (smallest gap)
+      const dom = dominantFamily();
+      let bestIdx = 0, bestGap = Infinity;
+      choiceClasses.forEach((_, i) => {
+        const fam = GROOVE_FAMILIES[stage.choices[i].tag] || stage.choices[i].tag;
+        const gap = familyScore(dom) - familyScore(fam);
+        if (gap < bestGap) { bestGap = gap; bestIdx = i; }
+      });
+      choiceClasses[bestIdx] = 'groove-flicker'; // faded but clickable
+    }
+
+    stage.choices.forEach((c, i) => {
+      const rawText = typeof c.text === 'function' ? c.text(env, traits) : c.text;
+      const grooveClass = choiceClasses[i];
+      const isBurn = grooveClass === 'groove-burn';
+      const prefix = !isBurn ? getAgainstGrainPrefix(c.tag, grooveDepth) : null;
+      const prefixHtml = prefix ? `<em style="color:rgba(139,26,46,0.6);font-size:0.88em">${prefix}</em>` : '';
+      const displayText = prefixHtml + rawText;
+
+      const clickable = !isBurn ? `onclick="makeChoice(${i})"` : '';
+      const dataAttrs = `data-raw="${rawText.replace(/"/g,'&quot;')}" data-prefix-html="${prefixHtml.replace(/"/g,'&quot;')}"`;
+
+      html += `<button class="choice-btn ${grooveClass}" ${clickable} ${dataAttrs}>${displayText}</button>`;
+    });
+
+    html += `</div>`;
+
+    // Show groove depth hint once groove is established
+    if (grooveDepth >= 3) {
+      const dom = dominantFamily();
+      const domScore = familyScore(dom);
+      if (domScore >= 3) {
+        const hints = {
+          protest:   'The groove runs deep. The urgent path is well-worn.',
+          avoidant:  'The inward path is so familiar now. The others feel distant.',
+          assertive: 'The direct path is your ground. Other ways feel like translation.',
+          reflective:'The pause is becoming second nature.',
+          secure:    'The faith in the gap holds. It always has.',
+        };
+        if (hints[dom]) {
+          html += `<div style="font-family:'Cormorant Garamond',serif;font-size:0.78rem;color:rgba(184,144,42,0.45);font-style:italic;text-align:right;margin-top:4px;padding-right:4px;">${hints[dom]}</div>`;
+        }
+      }
+    }
+
+  } else if (stage.type === 'end') {
+    html += `
+      <div style="text-align:center;padding:16px 0 4px">
+        <div class="resolution-badge">⚘  The Theatre Rests  ⚘</div>
+      </div>
+      <button class="continue-btn" style="align-self:center" onclick="showFinalResolution()">See your psychic portrait</button>
+    `;
+  } else {
+    const label = typeof stage.buttonText === 'function' ? stage.buttonText(env, traits) : (stage.buttonText || 'Continue');
+    html += `<button class="continue-btn" onclick="advanceStage()">${label} →</button>`;
+  }
+
+  const box = document.getElementById('scene-box');
+  box.className = 'scene-box';
+  box.innerHTML = html;
+  void box.offsetWidth;
+  box.className = 'scene-box fade-enter';
+  initGrooveEffects();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function makeChoice(choiceIdx) {
+  const stage = stageList[stageIndex];
+  const choice = stage.choices[choiceIdx];
+
+  addTrait(choice.tag);
+  choiceHistory[stage.id] = choice.tag;
+
+  // After choice: clear any live scramble effects, then dim unchosen buttons
+  clearAllScrambles();
+  const btns = document.querySelectorAll('.choice-btn');
+  btns.forEach((b, i) => {
+    if (i === choiceIdx) {
+      b.classList.remove('groove-dominant','groove-flicker','groove-scramble','groove-burn','groove-burning');
+      b.classList.add('selected');
+    } else {
+      b.classList.add('post-faded');
+    }
+  });
+
+  setTimeout(() => {
+    const area = document.getElementById('choices-area');
+    if (!area) return;
+
+    const outcome = typeof choice.outcome === 'function' ? choice.outcome(env, traits) : (choice.outcome || '');
+    const patternEcho = choice.patternEcho ? choice.patternEcho(traits) : null;
+
+    const outcomeEl = document.createElement('div');
+    outcomeEl.className = 'outcome-text fade-enter';
+    outcomeEl.innerHTML = outcome;
+    area.appendChild(outcomeEl);
+
+    if (patternEcho) {
+      const echoEl = document.createElement('div');
+      echoEl.className = 'pattern-echo fade-enter';
+      echoEl.innerHTML = '↩ ' + patternEcho;
+      area.appendChild(echoEl);
+    }
+
+    const btn = document.createElement('button');
+    btn.className = 'continue-btn fade-enter';
+    btn.textContent = 'Continue →';
+    btn.onclick = advanceStage;
+    area.appendChild(btn);
+
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+  }, 400);
+}
+
+function advanceStage() {
+  const next = stageIndex + 1;
+  if (next < stageList.length) renderStage(next);
+}
+
+// ═══════════════════════════════════════════════════════════
+// CLINICAL SECTION — Psychodynamic Formulation & DSM Landscape
+// ═══════════════════════════════════════════════════════════
+
+function getPsychodynamicFormulation(dominant, e) {
+  const envPhrase = {
+    enmeshed: 'the Warm House — where love was total but boundaries thin',
+    cold: 'the Orderly House — where competence was rewarded and warmth was rationed',
+    chaotic: 'the Unpredictable House — where love was real but not reliable'
+  }[e] || 'the early environment';
+
+  const core = {
+    protest: 'From the earliest months, the primary solution to absence was urgency: the raised voice, the insistent press, the refusal to let the gap go unprotested. In ' + envPhrase + ', this strategy had just enough success to become the default. In adult life the same engine runs when closeness is interrupted — the protest that was once directed at the caregiver\'s retreat is now directed at a partner\'s distraction, a friend\'s unavailability, a world that does not return feeling with sufficient speed. The adult presentation is characterised by emotional intensity, relational urgency, and a particular sensitivity to abandonment that has nothing to do with the current person and everything to do with the original gap. The feeling is real; the proportion often belongs to another room, another era, another face.',
+    secure_wait: 'The earliest experience of the gap — the absence, and then the reliable-enough return — built a foundational trust that has underwritten much of what followed. In ' + envPhrase + ', this trust was formed and, despite the environment\'s specific pressures, it held. In adult life it manifests as a genuine capacity for intimacy without merger, for tolerating separateness without panic, for waiting without being destroyed by the waiting. This is a developmental achievement more rare than it appears: most people carry some version of the gap as wound; you carry it as resource. The limitations are subtle — groundedness can function as distance; equanimity can become a way of not quite being fully arrived in a moment that calls for being moved.',
+    withdraw_early: 'The original solution to the problem of need was the inward turn: when the outer world was insufficient, uncertain, or threatening, the self retreated to what it could manage internally. In ' + envPhrase + ', this solution was adaptive — sometimes it was necessary. It became automatic. In adult life the withdrawal is so practised it often precedes conscious awareness: the moment something becomes emotionally demanding, the self is already elsewhere — composed, self-contained, slightly unreachable. The cost is discovered slowly, in the relationships that cannot quite penetrate the composure, and in a private interior that has been managed rather than inhabited. The person who turned inward very early is often the steadiest person in a room, and the loneliest.',
+    appease: 'From early childhood, the primary instrument for preserving connection was compliance: the no was swallowed, the need was quieted, the self was arranged around what the other required. In ' + envPhrase + ', this was the price of love — or felt like it. In adult life the accommodation is comprehensive and often unconscious: you read the room before you read your own wants, shape your responses to what the other needs before attending to what you feel. Relationships are maintained; intimacy in the specific sense of being known rather than needed is harder to find. The self that has practised disappearing is often genuinely uncertain, when asked directly, what it actually wants — not as evasion, but because the wanting was reliably managed into silence long ago.',
+    assert: 'The directness was forged early and in conditions that required it. In ' + envPhrase + ', knowing what you wanted and saying so was the most effective strategy available — it cut through uncertainty, established the self as real and distinct, produced results where more indirect approaches did not. In adult life the assertion is genuine, effective, and occasionally blunt in ways that foreclose the space where other things might be said. The limitation is not the directness itself but what it can crowd out: the softer register, the willingness to be uncertain, the capacity to receive rather than always to direct. The self that knows what it wants has sometimes had less practice with not-knowing — or with allowing the other\'s not-knowing to be in the room without being resolved.',
+    reflect: 'The observing capacity — the ability to watch experience as it occurs, to stand slightly apart from feeling in order to understand it — was developed early and refined continuously. In ' + envPhrase + ', this watching was protective: it gave the child information, distance, a form of safety that direct immersion in experience did not. In adult life the reflection is genuine, often remarkably accurate, and carries a subtle hazard: the understanding can become the destination rather than the path. Insight substitutes, at key moments, for the experience it describes. The watcher is always present; what is watched is sometimes less available than it appears from the outside. Psychoanalysts call this intellectualisation — not as a criticism but as a name for the way understanding can function as a refined avoidance of the thing being understood.',
+    identify: 'The primary move — when faced with a rival, an authority, or someone who had what you wanted — was to become them. The identification mechanism, deployed early in response to the oedipal situation, converted rivalry into aspiration and opposition into model. In ' + envPhrase + ', this was not merely a defence: it was generative. In adult life this manifests as genuine ambition, a talent for finding mentors and becoming what they represent, an ability to metabolise frustration into fuel. The question that mid-life sometimes poses is whether, in all the becoming, the becoming ever stopped — whether there is a self underneath the series of identifications, or whether the self was always primarily the act of becoming something else.'
+  };
+  return core[dominant] || '';
+}
+
+function getDSMConditions(dominant, e) {
+  const envMod = {
+    enmeshed: 'In this profile, the enmeshed environment directed the pattern primarily toward the relational — the urgency, withdrawal, or accommodation is organised around people rather than around performance.',
+    cold: 'In this profile, the cool environment pushed the pattern inward and toward achievement — the costs appear in the emotional register rather than in overt relational breakdown.',
+    chaotic: 'In this profile, the unpredictable environment gave the pattern a harder, more vigilant edge — built under genuine pressure, it carries that pressure into contexts where it is no longer necessary.'
+  }[e] || '';
+
+  const all = {
+    protest: [
+      {
+        name: 'Borderline Personality Disorder (BPD)',
+        mechanism: 'BPD is among the most likely clinical outcomes when the protest strategy meets a consistent failure of adequate response across development. The identity instability, fear of abandonment, and emotional dysregulation characteristic of BPD are not character flaws — they are the logical extension of a developmental situation in which the gap was too large, too often, and the self never fully formed a stable internal representation of the caregiver as reliably present. ' + envMod,
+        lifeExamples: [
+          'Feeling devastated or furious when a partner takes longer than expected to reply — not as preference, but as genuine emergency',
+          'Relationships that cycle between intense idealisation and sudden, bitter devaluation, bewildering to both parties',
+          'A persistent, disorienting uncertainty about who one is when no one is reflecting one back',
+          'Efforts to prevent abandonment — sometimes frantic, sometimes strategic — that occasionally trigger the very withdrawal they were meant to prevent'
+        ],
+        healingPath: 'Psychoanalytic work focuses on building the stable internal object that was never adequately established — a representation of the significant other that can be felt as present even across absence. Transference-Focused Psychotherapy (TFP) works directly with split internal representations, helping to integrate good-object and bad-object into a more complex, survivable whole. The therapeutic relationship itself is the primary instrument: the therapist who survives the patient\'s intensity, maintains the frame across ruptures, and remains consistently interested is providing, over time, what the original environment could not.'
+      },
+      {
+        name: 'Separation Anxiety Disorder (adult presentation)',
+        mechanism: 'When the nervous system was trained to experience separation as emergency rather than temporary absence, ordinary leave-takings in adult life carry the physiological signature of genuine threat. The anxiety is not irrational — it is the body\'s accurate memory of an earlier environment. ' + envMod,
+        lifeExamples: [
+          'Persistent, excessive worry about harm befalling attachment figures when they travel or are simply out of contact',
+          'Difficulty sleeping alone or in one\'s own company for extended periods without mounting distress',
+          'Recurring physical symptoms — nausea, chest tightness, headache — in anticipation of ordinary separations such as a partner\'s business trip',
+          'An awareness, sometimes humiliating, that the distress is disproportionate — alongside an inability to reduce it by knowing so'
+        ],
+        healingPath: 'Analytic work traces the separation anxiety to its developmental origin. The therapeutic relationship is itself the central laboratory: the patient learns, in the gap between sessions, that the therapist exists even when absent, that the self survives and even develops in the space of the other\'s non-presence. The tolerated absence, repeated across months and years, slowly revises the body\'s default.'
+      }
+    ],
+    secure_wait: [
+      {
+        name: 'Adjustment Disorder',
+        mechanism: 'The secure foundation is genuine and durable, but it was built in conditions of sufficient predictability. When circumstances deliver genuine, sustained disruption — bereavements, relationship endings, significant losses of structure — the groundedness that served across ordinary difficulties can be temporarily overwhelmed. ' + envMod + ' The presentation looks milder than many — because it is — but deserves attention precisely because it is unexpected in someone with this profile.',
+        lifeExamples: [
+          'A significant life-transition producing distress that feels out of character — the person who always managed well is suddenly not managing',
+          'The surprising discovery that the coping strategies that always worked simply do not work here',
+          'Irritability, low-grade anxiety, or a flatness of engagement that others notice before the person themselves does',
+          'A quality of being genuinely fine and then, in specific circumstances, genuinely not fine — with little gradient between the two states'
+        ],
+        healingPath: 'Analytic work with securely attached presentations is often shorter and more targeted than with other profiles — the foundational security provides a platform from which difficult material can be approached directly. The focus is on the specific site of difficulty: what this particular loss echoes in the developmental history, what it touches that was not previously accessed.'
+      },
+      {
+        name: 'Generalised Anxiety Disorder (late or reactive onset)',
+        mechanism: 'Even genuine security does not immunise against anxiety. When the cumulative demands of adult life exceed what the internal resources can efficiently process, anxiety can emerge that has been, until this point, successfully managed. ' + envMod + ' The presentation can be puzzling precisely because this person has always managed so well.',
+        lifeExamples: [
+          'A sustained period of worry that does not resolve with the usual strategies — exercise, social contact, reasonable reframing',
+          'Sleep disturbance, somatic complaints, or a mild but persistent sense of dread the person cannot easily connect to specific cause',
+          'A reduction in the spontaneity and lightness that characterised the person before — something has become heavy',
+          'Knowing, intellectually, that things are reasonably fine, while feeling a continuous low hum of alarm that the knowledge does not quieten'
+        ],
+        healingPath: 'Analytic work explores what is underneath the anxiety — often, in secure presentations, accumulated feeling from managed experiences that were processed efficiently rather than fully inhabited. The therapeutic space provides room for this material to surface without being handled back into resolution. The person\'s existing reflective capacity is an asset; the work is to have the feeling rather than understand it.'
+      }
+    ],
+    withdraw_early: [
+      {
+        name: 'Avoidant Personality Disorder',
+        mechanism: 'The inward turn that protected against an insufficient or unsafe early environment becomes, in adult life, a comprehensive interpersonal strategy: stay close enough to feel warmth, never close enough to be hurt. In avoidant personality disorder the desire for connection coexists with defences against it powerful enough to prevent the very thing sought. ' + envMod,
+        lifeExamples: [
+          'A pattern of approaching people and then, at a certain depth of closeness, finding reasons to withdraw — a perceived flaw, an imagined disappointment, a sense of being too much',
+          'Significant time spent alone, experienced as genuine preference, alongside a private loneliness that the solitude cannot reach',
+          'Being the person everyone respects and no one truly knows — present, capable, fundamentally unreachable',
+          'A private certainty that full exposure — being genuinely known — would result in rejection or disappointment'
+        ],
+        healingPath: 'Psychoanalytic work attends to the withdrawal as it occurs in the room — naming the moment the patient becomes slightly more composed, more distant, less present. Staying with the feeling that preceded the withdrawal, and demonstrating that full presence does not produce the hurt or merger that was anticipated, are the instruments of change. The work is slow because the defence is old and has been thoroughly validated by experience.'
+      },
+      {
+        name: 'Persistent Depressive Disorder — anhedonic variant',
+        mechanism: 'When the inward turn becomes sufficiently comprehensive, the emotional range available to conscious experience narrows. The defended interior is safe but impoverished. The result is often a chronic, low-temperature flatness — not acute sadness but an absence of full engagement with pleasure, connection, or meaning. ' + envMod,
+        lifeExamples: [
+          'Activities that others find deeply satisfying feel merely competent — the person does them well, without being in them',
+          'A persistent, abstract awareness that fuller emotional experience should be available — without clear access to it in practice',
+          'Intimate relationships that are pleasant and functional but lack a quality of aliveness that the person knows, somewhere, is possible',
+          'Creative or professional work that is consistently good and privately feels as if it is being produced from a slight distance'
+        ],
+        healingPath: 'Long-term analytic work slowly enlarges the emotional range by creating a relationship in which what has been defended is not only safe to bring but actively welcomed. The therapist\'s genuine interest in the patient\'s interior — the subtle, the unformulated, the half-felt — models a different relationship to interiority than the patient ever had. Change is usually experienced not as revelation but as gradual warming.'
+      }
+    ],
+    appease: [
+      {
+        name: 'Dependent Personality Disorder',
+        mechanism: 'When the self has been systematically organised around the other — their needs, emotional state, and approval — the adult may genuinely lack a stable internal sense of their own wants or direction independent of relationship. The compliance was originally the price of love; it has become the self. ' + envMod,
+        lifeExamples: [
+          'Difficulty making ordinary decisions without significant reassurance — not from lack of capacity but from genuine uncertainty about what one actually wants',
+          'Staying in relationships that are clearly insufficient, because aloneness feels more threatening than the relationship\'s costs',
+          'Urgently seeking a new relationship when one ends — the gap of aloneness is intolerable in a way distinct from grief',
+          'Being genuinely uncertain, when asked directly, what one wants — the question lands as strange or unanswerable'
+        ],
+        healingPath: 'Analytic work addresses the failure of individuation — the developmental step that was incomplete in the original environment. The therapeutic relationship models a different kind of attachment: the therapist is genuinely present and caring but does not merge, maintains their own perspective, and expects the patient to find their own direction within the relationship. The discovery that a relationship can hold without requiring self-erasure is slow and requires many repetitions before it is metabolised.'
+      },
+      {
+        name: 'Persistent Depressive Disorder — self-critical variant',
+        mechanism: 'The self that has been arranged around others\' needs, when it encounters failure to please or loss of approval, typically turns the resulting feeling inward as self-blame rather than outward as grievance. The depression that results has a particular quality: a pervasive sense of inadequacy that is resistant to external evidence of competence. ' + envMod,
+        lifeExamples: [
+          'A background conviction of one\'s own insufficiency that no external achievement quite reaches',
+          'A tendency, when something goes wrong in a relationship, to assume fundamental personal fault — before examining the evidence',
+          'A chronic tiredness that is partly the physical cost of sustained self-monitoring and the continuous suppression of need',
+          'Periods of deeper depression following relational losses or perceived failures to satisfy, out of proportion to the precipitating event'
+        ],
+        healingPath: 'Psychoanalytic work traces the self-criticism to its developmental origin — the moments when the self learned that its own wants were a problem to be managed rather than experiences to be received. The work involves the gradual restoration of the self as a legitimate subject: someone whose feelings are data, whose wants are real, and whose occasional failure to please is not evidence of fundamental wrongness.'
+      }
+    ],
+    assert: [
+      {
+        name: 'Narcissistic Personality Disorder',
+        mechanism: 'When assertion is the primary instrument of selfhood, and when the environment responded to the child\'s assertive distinctness with admiration rather than simple acknowledgment, the adult self can become organised around the continuous need for confirmation of its specialness. The directness that protected the self requires, over time, an audience. ' + envMod,
+        lifeExamples: [
+          'Persistent difficulty tolerating situations in which they are not the most significant presence — not from vanity but from a genuine, uncomfortable anxiety when confirming attention is elsewhere',
+          'Relationships in which the partner gradually notices that reciprocity is asymmetric — their experience is foreground, the partner\'s is background',
+          'Intense, somewhat disproportionate responses to criticism — not anger exactly, but a quality of injury larger than the critique warrants',
+          'A cycle between grandiosity and deflation: confidence that collapses unexpectedly when the confirming gaze is withdrawn'
+        ],
+        healingPath: 'Psychoanalytic work attends to the vulnerability beneath the assertion — the original experience of insufficient or distorted mirroring that produced a self dependent on the mirror. The therapist provides what Kohut called "optimal frustration": genuine interest without idealisation, consistent presence without total availability. Over time, as the internal sense of self becomes more stable, the need for continuous external confirmation decreases — the self no longer requires the reflection to know that it exists.'
+      },
+      {
+        name: 'Obsessive-Compulsive Personality Disorder (OCPD)',
+        mechanism: 'When assertion is directed primarily toward performance and mastery rather than interpersonal display, the result is often OCPD: a comprehensive orientation toward correctness and control that functions as both identity and defence against the more chaotic feeling that control holds at bay. ' + envMod,
+        lifeExamples: [
+          'A working life that is highly productive and in which genuine leisure is largely absent — rest feels like waste or falling behind',
+          'Difficulty delegating, because the implicit standard requires a correctness that others cannot reliably meet',
+          'Relationships experienced more as projects to be managed than as experiences to be inhabited',
+          'A persistent, somewhat exhausting relationship with one\'s own standards — the bar moves as soon as it is approached'
+        ],
+        healingPath: 'Analytic work explores what the control is protecting against: the affect that would arrive if the standards were relaxed, the childhood experience that made imperfection feel dangerous. The therapeutic relationship models a different relationship to imperfection — the therapist who is good enough, who makes mistakes and repairs them, who is not destroyed by falling short. The work involves gradually allowing the feeling that perfectionism has been holding at arm\'s length to finally be felt.'
+      }
+    ],
+    reflect: [
+      {
+        name: 'Depersonalization-Derealization Disorder',
+        mechanism: 'The reflective distance that protected against the original environment can, in its more extreme developments, become a persistent state of detachment from experience itself. The witness and the witnessed are separated enough that full immersion in any moment becomes difficult — the observing function is always on, always slightly interrupting. ' + envMod,
+        lifeExamples: [
+          'Watching oneself in social situations rather than participating — the observer function does not turn off in moments that call for undefended presence',
+          'Emotional experiences that arrive as objects to examine rather than states to inhabit — nameable but not quite felt',
+          'Intimate moments that should carry significance producing instead a quality of noting that they are significant',
+          'A weariness from the continuous observation — the watching that never rests even when rest is objectively safe'
+        ],
+        healingPath: 'Paradoxically, analytic work with strongly reflective presentations does not always add more reflection. At key moments, the work involves suspending the observation — arriving in experience rather than describing the arrival — and tolerating the brief loss of the watching position without anxiety. Being received by another person can temporarily displace self-observation with something more immediate. These moments, accumulated, begin to establish an alternative relationship to one\'s own experience.'
+      },
+      {
+        name: 'Generalised Anxiety Disorder / Obsessive-Compulsive Disorder',
+        mechanism: 'The reflective capacity turned against itself — analysing anxiety rather than tolerating it, seeking certainty through thought rather than through experience — produces the characteristic presentations of GAD and OCD in reflective profiles. Worry and obsession are, in this context, failed forms of the reflective function: the watching that cannot find what it is looking for, and cannot stop looking. ' + envMod,
+        lifeExamples: [
+          'Intrusive thoughts that arrive and cannot be resolved by examining them — the more carefully they are examined, the more present they become',
+          'Worry that shifts from object to object rather than resolving: whenever one concern is processed, another arrives to take its place',
+          'The paradox of knowing accurately that the worry is disproportionate — and being worried anyway, on two separate tracks simultaneously',
+          'Difficulty tolerating ambiguity or outcomes that cannot be anticipated through sufficient prior analysis'
+        ],
+        healingPath: 'Analytic work explores the function of the thinking: what certainty is being sought, what would happen if the analysis stopped and the experience were simply allowed. The anxiety beneath the thought is the real object of treatment. Learning that uncertainty is survivable — in a relationship that models equanimity rather than efficient solution — is the core of the work. The reflective capacity remains; it is gradually given other, less defensive things to do.'
+      }
+    ],
+    identify: [
+      {
+        name: 'Narcissistic Personality Disorder — aspirational variant',
+        mechanism: 'The identification mechanism — transforming rivals into models, converting the desire to have into the ambition to become — is among the most generative of psychological operations. When it becomes the primary mode of selfhood, however, the self can end up defined almost entirely by who it is in the process of becoming. The approval of significant figures carries a weight that is not fully about the present relationship. ' + envMod,
+        lifeExamples: [
+          'A persistent need for validation from people in positions of authority or expertise — not simple ambition, but something that feels like confirmation of existence',
+          'Difficulty resting in an achieved position; the need to identify with the next level is continuous and slightly compelled',
+          'Marked sensitivity to being underestimated by people whose opinion matters — a response disproportionate to the professional stakes',
+          'Relationships with peers that carry a subtle competitive quality even when consciously experienced as collegial and warm'
+        ],
+        healingPath: 'Analytic work explores the series of identifications — who has been become, at what cost, and what the self looks like when the becoming pauses. The work involves mourning: for the rivals who could not simply be rivals, for the self that was not able to simply be itself without a model to become. As the therapeutic relationship provides consistent recognition without requiring performance, the compelled quality of the identification often softens.'
+      },
+      {
+        name: 'Dependent Personality Disorder — idealised attachment variant',
+        mechanism: 'The identification mechanism applied to close relationships rather than primarily to achievement can produce a pattern of attaching intensely to idealised figures and organising the self around them — not from weakness but from the habitual conversion of the other into the version of self one wishes to become. The line between admiration and dependency becomes thin. ' + envMod,
+        lifeExamples: [
+          'A series of intense, formative relationships with mentors, partners, or close friends experienced as significantly larger than oneself',
+          'Difficulty maintaining a sense of direction and identity when these central relationships end or are disrupted',
+          'Being genuinely inspired by certain people — and slightly lost when their influence is removed',
+          'The retrospective sense, in mid-life, of having been several different people, each organised around a different significant figure'
+        ],
+        healingPath: 'Psychoanalytic work addresses the search for the self through the other — tracing the pattern back to its oedipal origin, where the rival-becoming-model was the first and most formative instance. The work involves finding what belongs to the self alone: the wants, the values, the ways of being that are not borrowed from admired others. This is quieter work than the identifications themselves; it requires the tolerance of a kind of nakedness.'
+      }
+    ]
+  };
+  return all[dominant] || [];
+}
+
+function buildClinicalSection() {
+  var dominant = dominantTrait(['protest','secure_wait','withdraw_early','appease','assert','reflect','identify']);
+  var formulation = getPsychodynamicFormulation(dominant, env);
+  var conditions = getDSMConditions(dominant, env);
+
+  if (!formulation && conditions.length === 0) return '';
+
+  var conditionHtml = conditions.map(function(c) {
+    var lifeLis = c.lifeExamples.map(function(ex) {
+      return '<li style="margin-bottom:7px">' + ex + '</li>';
+    }).join('');
+    return '<details class="insight-box" style="margin-bottom:9px;border-left-color:rgba(100,80,140,0.45)">' +
+      '<summary class="insight-toggle">' +
+        '<span class="insight-label" style="color:rgba(170,140,210,0.9)">' + c.name + '</span>' +
+        '<span class="insight-caret">▶</span>' +
+      '</summary>' +
+      '<div class="insight-text">' +
+        '<span class="school-label" style="color:rgba(150,110,190,0.8)">How it develops from this path</span>' +
+        '<p style="font-style:normal;margin-bottom:12px;line-height:1.78">' + c.mechanism + '</p>' +
+        '<span class="school-label" style="color:rgba(150,110,190,0.8)">How it shows up in daily life</span>' +
+        '<ul style="padding-left:18px;list-style:disc;font-style:normal;font-size:1rem;line-height:1.75;margin-bottom:12px">' + lifeLis + '</ul>' +
+        '<span class="school-label" style="color:rgba(150,110,190,0.8)">The analytic path toward healing</span>' +
+        '<p style="font-style:italic;line-height:1.78">' + c.healingPath + '</p>' +
+      '</div>' +
+    '</details>';
+  }).join('');
+
+  return '<div class="echo-box" style="margin-top:16px;border-left-color:rgba(100,80,140,0.5)">' +
+      '<div class="echo-label" style="color:rgba(170,140,210,0.9)">Psychodynamic Formulation</div>' +
+      '<div class="echo-text" style="font-style:normal;line-height:1.85;color:rgba(240,232,216,0.92)">' + formulation + '</div>' +
+    '</div>' +
+    '<div style="margin-top:14px">' +
+      '<div class="echo-label" style="color:rgba(170,140,210,0.9);margin-bottom:8px">The Clinical Landscape — Conditions That May Arise</div>' +
+      '<div style="font-family:\'Cormorant Garamond\',serif;font-size:0.9rem;color:rgba(200,184,154,0.6);font-style:italic;margin-bottom:12px;line-height:1.65">' +
+        'These are not predictions or diagnoses — they are developmental possibilities shaped by this particular path. Many people with this profile will not meet clinical criteria for any of them. They are offered as maps of where this territory can lead, and as a framework for understanding distress that might otherwise seem disconnected from its origins.' +
+      '</div>' +
+      conditionHtml +
+    '</div>';
+}
+
+// ═══════════════════════════════════════════════════════════
+// FINAL RESOLUTION
+// ═══════════════════════════════════════════════════════════
+
+function showFinalResolution() {
+  const box = document.getElementById('scene-box');
+  document.getElementById('psyche-fill').style.width = '100%';
+
+  // Analyse pattern
+  const reflectCount = traitCount('reflect');
+  const withdrawCount = traitCount('withdraw_early');
+  const appeaseCount = traitCount('appease');
+  const protestCount = traitCount('protest');
+  const assertCount = traitCount('assert');
+  const identifyCount = traitCount('identify');
+  const secureCount = traitCount('secure_wait');
+
+  const dominant = dominantTrait(['protest','secure_wait','withdraw_early','appease','assert','reflect','identify']);
+
+  const profiles = {
+    reflect: {
+      name: 'The Examined Life',
+      desc: 'You moved through the drama with increasing consciousness — feeling the old patterns, but finding, at key moments, the capacity to pause and redirect. The theatre of your inner life is not free of ghosts, but you have learned, at least sometimes, to name them. This is the rarest and most difficult of outcomes — not because the others are failures, but because consciousness costs something. You paid it.'
+    },
+    secure_wait: {
+      name: 'The Rooted Self',
+      desc: 'A reliable early foundation underwrote much of what followed. The trust built in those first months — that the gap would close, that the world was, on balance, safe — gave you a steadiness that others could feel. You carried the oedipal drama, as everyone does, but from ground that did not give way.'
+    },
+    protest: {
+      name: 'The Ardent Seeker',
+      desc: 'Desire runs hot and urgent in you. The gap was never bearable without action; the feeling was never small enough to wait. This has given you an intensity, a directness, a capacity for full investment that others often find magnetic. It has also cost you — in the collateral of what the urgency could not quite hear. The work is not to quieten the desire, but to hold it slightly more lightly.'
+    },
+    appease: {
+      name: 'The Devoted Accommodator',
+      desc: 'You became expert at love through service — knowing what was needed, offering it before it was asked. You have been indispensable. The question that has come, quietly, over the years, is: who are you when no one is requiring anything of you? The self that was built to serve others is real. There is also a self behind it. Both deserve to be in the room.'
+    },
+    assert: {
+      name: 'The Directed Will',
+      desc: 'You have known what you wanted and said so, from the first negotiation at age two through every subsequent encounter with desire and authority. This directness is a form of integrity — your inner and outer states have remained in closer contact than for most people. The question, from time to time, has been whether the assertion left enough room for what others needed to say.'
+    },
+    withdraw_early: {
+      name: 'The Self-Sufficient',
+      desc: 'You learned early that the inward turn was safe. Need, turned outward, was uncertain; need, managed internally, was controllable. This has made you independent, private, often composed in moments when others are not. It has also made you, at times, unreachable — present in every external sense and slightly absent in the one that matters most.'
+    },
+    identify: {
+      name: 'The Aspirant',
+      desc: 'You discovered, early and intuitively, how to transform rivalry into admiration and opposition into aspiration. The rivals in your life became your models; the people who could have frustrated you became instead the people who showed you what was possible. This is a sophisticated move — and it has carried you far. The question is whether, in all the becoming, you also found time to simply be.'
+    }
+  };
+
+  const profile = profiles[dominant] || profiles.reflect;
+
+  // Build pattern ledger
+  const ledgerRows = Object.entries(choiceHistory).map(([stageId, tag]) => {
+    const stageName = stageId.replace(/_/g,' ');
+    return `<div class="pattern-row"><em>${stageName}:</em> ${TRAIT_NAMES[tag]||tag}</div>`;
+  }).join('');
+
+  // Environment summary
+  const envSummary = {
+    enmeshed: 'Raised in the Warm House — love in abundance, separateness in short supply.',
+    cold: 'Raised in the Orderly House — reliable, competent, emotionally reserved.',
+    chaotic: 'Raised in the Unpredictable House — love and rupture in equal measure.'
+  }[env];
+
+  box.innerHTML = `
+    <div class="age-label">Integration · The End of the Beginning</div>
+    <div style="text-align:center;padding:12px 0 4px">
+      <div style="font-family:'Cormorant Garamond',serif;font-size:0.68rem;letter-spacing:0.32em;color:var(--aged);opacity:0.65;text-transform:uppercase;margin-bottom:8px;">Your Psychic Portrait</div>
+      <div class="resolution-badge">${profile.name}</div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:0.82rem;color:var(--aged);opacity:0.6;margin-top:8px;font-style:italic;">${envSummary}</div>
+    </div>
+    <div class="scene-text" style="font-style:normal">${profile.desc}</div>
+
+    <div class="pattern-ledger">
+      <div class="pattern-ledger-title">The Pattern Through the Years</div>
+      ${ledgerRows}
+    </div>
+
+    ${buildClinicalSection()}
+
+    <div class="insight-box" style="margin-top:4px">
+      <div class="insight-label">Freud's Final Word</div>
+      <div class="insight-text">
+        "The goal of our efforts may be described as the strengthening of the ego, making it more independent of the superego, widening its field of vision, and so extending its organisation so that it can appropriate fresh portions of the id. Where id was, there ego shall be."<br><br>
+        The Oedipus complex is not your fate. It is your <em>starting point</em>. The work of a lifetime is to become, gradually, the author of a story that began before you could speak.
+      </div>
+    </div>
+    <button class="continue-btn" style="align-self:center;margin-top:8px" onclick="location.reload()">Begin Again ↺</button>
+  `;
+  box.className = 'scene-box fade-enter';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
