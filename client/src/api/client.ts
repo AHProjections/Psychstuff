@@ -83,4 +83,46 @@ export const api = {
       adherenceByDay: { log_date: string; name: string; color: string; icon: string; category: string; completed: number }[];
       weeklyAdherence: { week: string; name: string; color: string; adherence_pct: number }[];
     }>(`/patient/insights?days=${days}`),
+
+  // Biography
+  getBiographyLevels: () =>
+    request<{ levels: import('../types').DetailLevelInfo[] }>('/biography/levels'),
+
+  getBiographyQuestions: (level: string) =>
+    request<{ plan: import('../types').BiographyTopicPlan[] }>(`/biography/questions?level=${level}`),
+
+  createBiographySession: (data: { subject_name: string; detail_level: string }) =>
+    request<{ session: import('../types').BiographySession }>('/biography/sessions', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  getBiographySession: (id: number) =>
+    request<{ session: import('../types').BiographySession; responses: import('../types').BiographyResponse[] }>(
+      `/biography/sessions/${id}`
+    ),
+
+  listBiographySessions: () =>
+    request<{ sessions: import('../types').BiographySession[] }>('/biography/sessions'),
+
+  saveBiographyResponse: (sessionId: number, data: { topic: string; question: string; answer: string }) =>
+    request<{ response: import('../types').BiographyResponse }>(
+      `/biography/sessions/${sessionId}/responses`,
+      { method: 'POST', body: JSON.stringify(data) }
+    ),
+
+  deleteBiographyResponse: (sessionId: number, responseId: number) =>
+    request<{ ok: boolean }>(`/biography/sessions/${sessionId}/responses/${responseId}`, {
+      method: 'DELETE',
+    }),
+
+  generateBiographyDraft: (sessionId: number) =>
+    request<{ draft: string }>(`/biography/sessions/${sessionId}/generate`, {
+      method: 'POST',
+    }),
+
+  deleteBiographySession: (sessionId: number) =>
+    request<{ ok: boolean }>(`/biography/sessions/${sessionId}`, {
+      method: 'DELETE',
+    }),
 };

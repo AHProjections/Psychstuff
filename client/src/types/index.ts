@@ -111,3 +111,43 @@ export const CATEGORY_COLORS: Record<string, string> = {
   behavioral: '#F59E0B',
   lifestyle: '#EAB308',
 };
+
+// Biography types
+export type DetailLevel = 'ultra_brief' | 'brief' | 'moderate' | 'detailed' | 'comprehensive';
+
+export interface DetailLevelInfo {
+  id: DetailLevel;
+  label: string;
+  description: string;
+  pageEstimate: string;
+  maxDepth: number;
+  questionCount: number;
+}
+
+export interface BiographySession {
+  id: number;
+  subject_name: string;
+  detail_level: DetailLevel;
+  status: 'in_progress' | 'draft_generated';
+  draft: string | null;
+  created_at: string;
+  updated_at: string;
+  response_count?: number;
+}
+
+export interface BiographyResponse {
+  id: number;
+  session_id: number;
+  topic: string;
+  question: string;
+  answer: string;
+  created_at: string;
+}
+
+export interface BiographyTopicPlan {
+  id: string;
+  name: string;
+  icon: string;
+  description: string;
+  questions: string[];
+}
