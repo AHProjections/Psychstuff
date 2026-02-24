@@ -74,6 +74,25 @@ function setup() {
       created_at TEXT DEFAULT (datetime('now')),
       UNIQUE(patient_id, log_date)
     );
+
+    CREATE TABLE IF NOT EXISTS biography_sessions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      subject_name TEXT NOT NULL,
+      detail_level TEXT NOT NULL,
+      status TEXT DEFAULT 'in_progress',
+      draft TEXT,
+      created_at TEXT DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS biography_responses (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      session_id INTEGER NOT NULL REFERENCES biography_sessions(id),
+      topic TEXT NOT NULL,
+      question TEXT NOT NULL,
+      answer TEXT NOT NULL,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
   `);
 }
 

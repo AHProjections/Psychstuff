@@ -8,6 +8,7 @@ app.use(express.json());
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/provider', require('./routes/provider'));
 app.use('/api/patient', require('./routes/patient'));
+app.use('/api/biography', require('./routes/biography'));
 
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
 

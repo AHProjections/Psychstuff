@@ -5,6 +5,9 @@ import ProviderDashboard from './pages/ProviderDashboard';
 import PatientDetail from './pages/PatientDetail';
 import PatientDashboard from './pages/PatientDashboard';
 import PatientInsights from './pages/PatientInsights';
+import BiographyWelcome from './pages/BiographyWelcome';
+import BiographyInterview from './pages/BiographyInterview';
+import BiographyDraft from './pages/BiographyDraft';
 
 function RootRedirect() {
   const { user } = useAuth();
@@ -51,6 +54,11 @@ export default function App() {
           <Route path="/patient/insights" element={
             <RequireAuth role="patient"><PatientInsights /></RequireAuth>
           } />
+
+          {/* Biography routes — no auth required */}
+          <Route path="/biography" element={<BiographyWelcome />} />
+          <Route path="/biography/interview/:id" element={<BiographyInterview />} />
+          <Route path="/biography/draft/:id" element={<BiographyDraft />} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
