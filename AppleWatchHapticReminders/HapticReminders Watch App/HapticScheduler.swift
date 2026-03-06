@@ -1,58 +1,6 @@
 import WatchKit
 import Combine
 
-// MARK: - Interval Mode
-
-enum IntervalMode: String, CaseIterable, Identifiable {
-    case every15Min  = "Every 15 min"
-    case every30Min  = "Every 30 min"
-    case everyHour   = "Every hour"
-    case quarterPast = "15 min after hour"
-    case halfPast    = "30 min after hour"
-
-    var id: String { rawValue }
-
-    /// Returns the next Date this mode should fire, given the current time.
-    func nextFireDate(from now: Date = Date()) -> Date {
-        let cal = Calendar.current
-        let comps = cal.dateComponents([.minute, .second], from: now)
-        let minute = comps.minute ?? 0
-        let second = comps.second ?? 0
-        let totalSeconds = minute * 60 + second
-
-        let secondsUntilNext: Int
-        switch self {
-        case .every15Min, .quarterPast:
-            // Align to next multiple of 15 minutes
-            let period = 15 * 60
-            secondsUntilNext = period - (totalSeconds % period)
-
-        case .every30Min, .halfPast:
-            // Align to next multiple of 30 minutes
-            let period = 30 * 60
-            secondsUntilNext = period - (totalSeconds % period)
-
-        case .everyHour:
-            // Align to the top of the next hour
-            let period = 60 * 60
-            secondsUntilNext = period - (totalSeconds % period)
-        }
-
-        // Avoid firing immediately (< 3 s away) – skip to the one after
-        let interval = Double(secondsUntilNext < 3 ? secondsUntilNext + intervalPeriod : secondsUntilNext)
-        return now.addingTimeInterval(interval)
-    }
-
-    /// The repeating period in seconds for this mode.
-    var intervalPeriod: Int {
-        switch self {
-        case .every15Min, .quarterPast: return 15 * 60
-        case .every30Min, .halfPast:    return 30 * 60
-        case .everyHour:                return 60 * 60
-        }
-    }
-}
-
 // MARK: - Haptic Type
 
 enum HapticType: String, CaseIterable, Identifiable {
@@ -64,7 +12,7 @@ enum HapticType: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
-    var hapticType: WKHapticType {
+    var wkType: WKHapticType {
         switch self {
         case .notification: return .notification
         case .click:        return .click
@@ -73,6 +21,32 @@ enum HapticType: String, CaseIterable, Identifiable {
         case .retry:        return .retry
         }
     }
+
+    var icon: String {
+        switch self {
+        case .notification: return "bell.fill"
+        case .click:        return "circle.fill"
+        case .directionUp:  return "arrow.up.circle.fill"
+        case .success:      return "checkmark.circle.fill"
+        case .retry:        return "arrow.clockwise.circle.fill"
+        }
+    }
+}
+
+// MARK: - Interval Config
+
+/// Everything needed to describe when haptics should fire.
+struct IntervalConfig {
+    /// Length of one interval, in minutes. Range: 1–240.
+    var minutes: Int = 30
+
+    /// When true the timer aligns to clock boundaries
+    /// (e.g. :00, :30 for 30-min intervals) instead of starting
+    /// a fresh countdown from the moment Start is tapped.
+    var alignToClock: Bool = true
+
+    /// How many haptic pulses to play per reminder (1–3).
+    var tapsPerReminder: Int = 1
 }
 
 // MARK: - HapticScheduler
@@ -80,14 +54,17 @@ enum HapticType: String, CaseIterable, Identifiable {
 @MainActor
 final class HapticScheduler: NSObject, ObservableObject {
 
-    @Published var isRunning     = false
-    @Published var selectedMode  : IntervalMode = .every30Min
-    @Published var hapticType    : HapticType   = .notification
-    @Published var nextFireDate  : Date?
-    @Published var tapCount      : Int = 0
+    @Published var isRunning      = false
+    @Published var config         = IntervalConfig()
+    @Published var hapticType     : HapticType = .notification
+    @Published var nextFireDate   : Date?
+    /// Set to the session-start time initially, then updated on every tap.
+    @Published var lastFiredDate  : Date?
+    @Published var tapCount       : Int = 0
 
-    private var session  : WKExtendedRuntimeSession?
-    private var timer    : Timer?
+    private var session       : WKExtendedRuntimeSession?
+    private var hapticTimer   : Timer?
+    private var multiTapTimer : Timer?
 
     // MARK: - Public API
 
@@ -100,37 +77,70 @@ final class HapticScheduler: NSObject, ObservableObject {
     }
 
     func stop() {
-        cancelTimer()
+        cancelTimers()
         session?.invalidate()
-        session    = nil
-        isRunning  = false
-        nextFireDate = nil
+        session       = nil
+        isRunning     = false
+        nextFireDate  = nil
+        lastFiredDate = nil
     }
 
-    // MARK: - Private
+    /// Fire a one-shot preview so the user can feel the chosen haptic.
+    func previewHaptic() {
+        playHapticSequence()
+    }
+
+    // MARK: - Scheduling
 
     private func scheduleNextHaptic() {
-        cancelTimer()
-        let next = selectedMode.nextFireDate()
+        cancelTimers()
+        let next = nextDate()
         nextFireDate = next
-        let delay = max(0, next.timeIntervalSinceNow)
+        let delay = max(0.1, next.timeIntervalSinceNow)
 
-        timer = Timer.scheduledTimer(withTimeInterval: delay, repeats: false) { [weak self] _ in
-            Task { @MainActor in
-                self?.fireHaptic()
-            }
+        hapticTimer = Timer.scheduledTimer(withTimeInterval: delay, repeats: false) { [weak self] _ in
+            Task { @MainActor in self?.fireHaptic() }
+        }
+    }
+
+    private func nextDate(from now: Date = Date()) -> Date {
+        if config.alignToClock {
+            let cal   = Calendar.current
+            let comps = cal.dateComponents([.minute, .second], from: now)
+            let m     = comps.minute ?? 0
+            let s     = comps.second ?? 0
+            let total = m * 60 + s
+            let period = config.minutes * 60
+            var secsUntilNext = period - (total % period)
+            if secsUntilNext < 3 { secsUntilNext += period }   // skip if too close
+            return now.addingTimeInterval(Double(secsUntilNext))
+        } else {
+            return now.addingTimeInterval(Double(config.minutes * 60))
         }
     }
 
     private func fireHaptic() {
-        WKInterfaceDevice.current().play(hapticType.hapticType)
+        lastFiredDate = Date()
         tapCount += 1
+        playHapticSequence()
         scheduleNextHaptic()
     }
 
-    private func cancelTimer() {
-        timer?.invalidate()
-        timer = nil
+    private func playHapticSequence() {
+        WKInterfaceDevice.current().play(hapticType.wkType)
+        guard config.tapsPerReminder > 1 else { return }
+        var fired = 1
+        multiTapTimer = Timer.scheduledTimer(withTimeInterval: 0.4, repeats: true) { [weak self] t in
+            guard let self else { t.invalidate(); return }
+            WKInterfaceDevice.current().play(self.hapticType.wkType)
+            fired += 1
+            if fired >= self.config.tapsPerReminder { t.invalidate() }
+        }
+    }
+
+    private func cancelTimers() {
+        hapticTimer?.invalidate();   hapticTimer   = nil
+        multiTapTimer?.invalidate(); multiTapTimer = nil
         nextFireDate = nil
     }
 }
@@ -143,22 +153,23 @@ extension HapticScheduler: WKExtendedRuntimeSessionDelegate {
         _ extendedRuntimeSession: WKExtendedRuntimeSession
     ) {
         Task { @MainActor in
-            isRunning = true
+            isRunning     = true
+            lastFiredDate = Date()   // treat start as t=0 for the progress ring
             scheduleNextHaptic()
         }
     }
 
-    /// Called ~5 seconds before the session expires. Start a fresh session so
-    /// coverage is continuous.
+    /// Called ~5 s before the session expires — renew immediately so haptics
+    /// keep firing without any gap.
     nonisolated func extendedRuntimeSessionWillExpire(
         _ extendedRuntimeSession: WKExtendedRuntimeSession
     ) {
         Task { @MainActor in
-            cancelTimer()
-            let s = WKExtendedRuntimeSession()
-            s.delegate = self
-            session = s
-            s.start()
+            cancelTimers()
+            let fresh = WKExtendedRuntimeSession()
+            fresh.delegate = self
+            session = fresh
+            fresh.start()
         }
     }
 
@@ -168,11 +179,11 @@ extension HapticScheduler: WKExtendedRuntimeSessionDelegate {
         error: Error?
     ) {
         Task { @MainActor in
-            // .sessionEnded means we invalidated it ourselves – ignore
             guard reason != .sessionEnded else { return }
-            cancelTimer()
-            isRunning  = false
-            nextFireDate = nil
+            cancelTimers()
+            isRunning     = false
+            nextFireDate  = nil
+            lastFiredDate = nil
         }
     }
 }
