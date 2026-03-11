@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RESIST — Evolution Game</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #020608;
+  --green: #39ff14;
+  --green-dim: rgba(57, 255, 20, 0.15);
+  --green-glow: rgba(57, 255, 20, 0.4);
+  --text: #a0ffb0;
+  --text-dim: #3a6045;
+  --border: rgba(57, 255, 20, 0.25);
+  --panel: rgba(3, 14, 8, 0.92);
+}
+
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Courier New', Courier, monospace;
+  user-select: none;
+}
+
+canvas {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+}
+
+/* ──────────── UI OVERLAY ──────────── */
+#ui {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+}
+
+#topbar {
+  padding: 14px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(to bottom, rgba(2,6,8,0.95), transparent);
+  pointer-events: all;
+  flex-shrink: 0;
+}
+
+#logo {
+  font-size: 1.6em;
+  letter-spacing: 0.5em;
+  color: var(--green);
+  text-shadow: 0 0 20px var(--green-glow), 0 0 40px rgba(57,255,20,0.15);
+}
+
+#stats-row {
+  display: flex;
+  gap: 28px;
+  align-items: center;
+}
+
+.stat-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+.stat-label { font-size: 0.65em; letter-spacing: 0.12em; color: var(--text-dim); }
+.stat-value { font-size: 0.95em; letter-spacing: 0.08em; color: var(--text); }
+
+#pop-bar-wrap {
+  width: 160px;
+  height: 6px;
+  background: rgba(57,255,20,0.08);
+  border: 1px solid rgba(57,255,20,0.2);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+#pop-bar {
+  height: 100%;
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green-glow);
+  transition: width 0.4s, background 0.4s;
+  width: 100%;
+}
+
+/* resistance badges */
+#resist-row {
+  display: flex;
+  gap: 6px;
+  padding: 6px 28px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+.resist-badge {
+  padding: 2px 10px;
+  border: 1px solid;
+  font-size: 0.65em;
+  letter-spacing: 0.1em;
+  opacity: 0.5;
+  transition: opacity 0.4s, box-shadow 0.4s;
+  border-radius: 2px;
+}
+.resist-badge.active {
+  opacity: 1;
+  box-shadow: 0 0 8px currentColor;
+}
+
+#middle { flex: 1; display: flex; align-items: center; justify-content: center; }
+
+/* wave announcement */
+#wave-announce {
+  text-align: center;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s;
+}
+#wave-announce.show { opacity: 1; }
+#wave-name-el {
+  font-size: 2.4em;
+  letter-spacing: 0.3em;
+  text-shadow: 0 0 20px currentColor;
+  margin-bottom: 6px;
+}
+#wave-sub-el {
+  font-size: 0.78em;
+  letter-spacing: 0.2em;
+  color: var(--text-dim);
+}
+
+#bottombar {
+  padding: 10px 28px 16px;
+  background: linear-gradient(to top, rgba(2,6,8,0.95), transparent);
+  pointer-events: all;
+  flex-shrink: 0;
+}
+#phase-text {
+  font-size: 0.72em;
+  letter-spacing: 0.18em;
+  color: var(--text-dim);
+  text-align: center;
+  margin-bottom: 8px;
+}
+#mutation-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  justify-content: center;
+}
+.mtag {
+  padding: 2px 8px;
+  border: 1px solid;
+  font-size: 0.62em;
+  letter-spacing: 0.08em;
+  border-radius: 2px;
+  opacity: 0.7;
+}
+
+/* ──────────── SCREENS ──────────── */
+.screen {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  background: rgba(2,6,8,0.9);
+}
+.screen.hidden { display: none; }
+
+.sc-box {
+  max-width: 640px;
+  width: 90%;
+  padding: 48px 40px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  text-align: center;
+  position: relative;
+}
+.sc-box::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 10%; right: 10%;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--green), transparent);
+  box-shadow: 0 0 10px var(--green-glow);
+}
+
+.sc-title {
+  font-size: 3.5em;
+  letter-spacing: 0.5em;
+  color: var(--green);
+  text-shadow: 0 0 30px var(--green-glow), 0 0 60px rgba(57,255,20,0.1);
+  margin-bottom: 6px;
+}
+.sc-sub {
+  font-size: 0.72em;
+  letter-spacing: 0.3em;
+  color: var(--text-dim);
+  margin-bottom: 32px;
+}
+.sc-body {
+  font-size: 0.85em;
+  line-height: 2;
+  color: var(--text);
+  margin-bottom: 36px;
+  text-align: left;
+}
+.sc-body p { margin-bottom: 8px; }
+.sc-body em { color: var(--green); font-style: normal; }
+
+.btn {
+  display: inline-block;
+  padding: 12px 36px;
+  border: 1px solid var(--green);
+  color: var(--green);
+  background: transparent;
+  font-family: 'Courier New', monospace;
+  font-size: 0.85em;
+  letter-spacing: 0.2em;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn:hover {
+  background: rgba(57,255,20,0.12);
+  box-shadow: 0 0 20px var(--green-glow);
+}
+
+/* ──────────── EVOLUTION SCREEN ──────────── */
+#evo-screen .sc-box { max-width: 900px; }
+#evo-flavor {
+  font-size: 0.78em;
+  line-height: 1.8;
+  color: var(--text-dim);
+  margin-bottom: 28px;
+  font-style: italic;
+  border-left: 2px solid var(--border);
+  padding-left: 16px;
+  text-align: left;
+}
+#evo-surviving {
+  font-size: 0.72em;
+  letter-spacing: 0.15em;
+  color: var(--text-dim);
+  margin-bottom: 24px;
+}
+
+.cards-row {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.mcard {
+  width: 230px;
+  padding: 22px 18px;
+  border: 1px solid var(--border);
+  background: rgba(5,18,10,0.9);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+  position: relative;
+  overflow: hidden;
+}
+.mcard-bar {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+}
+.mcard:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+}
+.mcard-icon { font-size: 1.8em; display: block; margin-bottom: 10px; }
+.mcard-name {
+  font-size: 0.78em;
+  letter-spacing: 0.15em;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+.mcard-desc {
+  font-size: 0.7em;
+  line-height: 1.7;
+  color: var(--text-dim);
+  margin-bottom: 10px;
+}
+.mcard-effect {
+  font-size: 0.7em;
+  color: #7af0ff;
+  border-top: 1px solid rgba(122,240,255,0.2);
+  padding-top: 8px;
+}
+.cards-hint {
+  font-size: 0.65em;
+  letter-spacing: 0.14em;
+  color: var(--text-dim);
+}
+
+/* ──────────── END SCREENS ──────────── */
+#victory-screen .sc-title { color: #7af0ff; text-shadow: 0 0 30px rgba(122,240,255,0.5); }
+#victory-screen .sc-box::before { background: linear-gradient(to right, transparent, #7af0ff, transparent); box-shadow: 0 0 10px rgba(122,240,255,0.4); }
+#victory-screen .btn { border-color: #7af0ff; color: #7af0ff; }
+#victory-screen .btn:hover { background: rgba(122,240,255,0.1); box-shadow: 0 0 20px rgba(122,240,255,0.3); }
+
+#defeat-screen .sc-title { color: #ff4040; font-size: 2.8em; text-shadow: 0 0 30px rgba(255,64,64,0.5); }
+#defeat-screen .sc-box::before { background: linear-gradient(to right, transparent, #ff4040, transparent); box-shadow: 0 0 10px rgba(255,64,64,0.4); }
+#defeat-screen .btn { border-color: #ff6060; color: #ff6060; }
+#defeat-screen .btn:hover { background: rgba(255,60,60,0.1); box-shadow: 0 0 20px rgba(255,60,60,0.3); }
+
+.end-genes { margin-top: 20px; }
+.end-gene-tag {
+  display: inline-block;
+  padding: 3px 10px;
+  border: 1px solid;
+  font-size: 0.65em;
+  margin: 3px;
+  border-radius: 2px;
+}
+</style>
+</head>
+<body>
+
+<canvas id="cvs"></canvas>
+
+<!-- UI overlay -->
+<div id="ui">
+  <div id="topbar">
+    <div id="logo">RESIST</div>
+    <div id="stats-row">
+      <div class="stat-group">
+        <span class="stat-label">POPULATION</span>
+        <span class="stat-value" id="st-pop">1,000</span>
+        <div id="pop-bar-wrap"><div id="pop-bar"></div></div>
+      </div>
+      <div class="stat-group">
+        <span class="stat-label">WAVE</span>
+        <span class="stat-value" id="st-wave">—</span>
+      </div>
+      <div class="stat-group">
+        <span class="stat-label">LAST SURVIVED</span>
+        <span class="stat-value" id="st-surv">—</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="resist-row">
+    <span class="resist-badge" id="rb-bl" style="color:#f5d020;border-color:#f5d020">β-LACTAM</span>
+    <span class="resist-badge" id="rb-tc" style="color:#ff8c42;border-color:#ff8c42">TETRACYCLINE</span>
+    <span class="resist-badge" id="rb-fq" style="color:#00d4ff;border-color:#00d4ff">FLUOROQUINOLONE</span>
+    <span class="resist-badge" id="rb-gp" style="color:#c77dff;border-color:#c77dff">GLYCOPEPTIDE</span>
+    <span class="resist-badge" id="rb-gn" style="color:#39ff14;border-color:#39ff14">GENERAL</span>
+    <span class="resist-badge" id="rb-bf" style="color:#90ee90;border-color:#90ee90">BIOFILM</span>
+    <span class="resist-badge" id="rb-sp" style="color:#aaaaaa;border-color:#aaaaaa">SPORE</span>
+    <span class="resist-badge" id="rb-pe" style="color:#ff69b4;border-color:#ff69b4">PERSISTER</span>
+  </div>
+
+  <div id="middle">
+    <div id="wave-announce">
+      <div id="wave-name-el">PENICILLIN</div>
+      <div id="wave-sub-el">BETA-LACTAM · WAVE 1 OF 7</div>
+    </div>
+  </div>
+
+  <div id="bottombar">
+    <div id="phase-text">INITIALIZING COLONY…</div>
+    <div id="mutation-tags"></div>
+  </div>
+</div>
+
+<!-- Title Screen -->
+<div id="title-screen" class="screen">
+  <div class="sc-box">
+    <div class="sc-title">RESIST</div>
+    <div class="sc-sub">EVOLUTION AGAINST EXTINCTION</div>
+    <div class="sc-body">
+      <p>You are a colony of bacteria — ancient, adaptable, unkillable.</p>
+      <p>Humanity has declared war on your kind. Seven waves of antibiotics will sweep through your population. Each more lethal than the last.</p>
+      <p>Most of your kin will perish. But some will survive. And in survival: <em>evolve.</em></p>
+      <p>Between each assault, guide your colony's mutations. Choose wisely. Build resistance. Outlast extinction.</p>
+    </div>
+    <button class="btn" id="btn-start">BEGIN EVOLUTION</button>
+  </div>
+</div>
+
+<!-- Evolution Screen -->
+<div id="evo-screen" class="screen hidden">
+  <div class="sc-box">
+    <div class="sc-title" style="font-size:2.2em; margin-bottom:4px">MUTATION EVENT</div>
+    <div id="evo-surviving" class="sc-sub"></div>
+    <div id="evo-flavor"></div>
+    <div class="cards-row" id="cards-row"></div>
+    <div class="cards-hint">SELECT ONE ADAPTATION TO PROPAGATE THROUGH YOUR LINEAGE</div>
+  </div>
+</div>
+
+<!-- Victory Screen -->
+<div id="victory-screen" class="screen hidden">
+  <div class="sc-box">
+    <div class="sc-title">RESISTANT</div>
+    <div class="sc-sub">YOUR LINEAGE HAS ENDURED</div>
+    <div class="sc-body" id="victory-body"></div>
+    <button class="btn" id="btn-victory-restart">EVOLVE AGAIN</button>
+  </div>
+</div>
+
+<!-- Defeat Screen -->
+<div id="defeat-screen" class="screen hidden">
+  <div class="sc-box">
+    <div class="sc-title">EXTINCT</div>
+    <div class="sc-sub">YOUR LINEAGE HAS ENDED</div>
+    <div class="sc-body" id="defeat-body"></div>
+    <button class="btn" id="btn-defeat-restart">TRY AGAIN</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+// ═══════════════════════════════════════════════════════════
+//  RESIST — Evolution Game
+// ═══════════════════════════════════════════════════════════
+
+const cvs = document.getElementById('cvs');
+const ctx = cvs.getContext('2d');
+
+// ── Resize ──────────────────────────────────────────────────
+function resize() {
+  cvs.width  = window.innerWidth;
+  cvs.height = window.innerHeight;
+}
+window.addEventListener('resize', resize);
+resize();
+
+// ── Audio ────────────────────────────────────────────────────
+let ac;
+function ensureAudio() {
+  if (!ac) ac = new (window.AudioContext || window.webkitAudioContext)();
+}
+function tone(freq, type, dur, vol = 0.25, t0 = 0) {
+  if (!ac) return;
+  const o = ac.createOscillator();
+  const g = ac.createGain();
+  o.connect(g); g.connect(ac.destination);
+  o.type = type;
+  o.frequency.setValueAtTime(freq, ac.currentTime + t0);
+  o.frequency.exponentialRampToValueAtTime(freq * 0.5, ac.currentTime + t0 + dur * 0.85);
+  g.gain.setValueAtTime(0, ac.currentTime + t0);
+  g.gain.linearRampToValueAtTime(vol, ac.currentTime + t0 + 0.015);
+  g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + t0 + dur);
+  o.start(ac.currentTime + t0);
+  o.stop(ac.currentTime + t0 + dur);
+}
+function chord(freqs, type, dur, vol = 0.12) {
+  freqs.forEach((f, i) => tone(f, type, dur, vol, i * 0.04));
+}
+function sfx(name) {
+  if (!ac) return;
+  switch (name) {
+    case 'start':   chord([220, 277, 330], 'sine', 0.8, 0.12); break;
+    case 'attack':  tone(160, 'sawtooth', 0.9, 0.2); tone(130, 'sawtooth', 1.4, 0.14, 0.15); break;
+    case 'evolve':  chord([440, 554, 659], 'sine', 0.7, 0.14); break;
+    case 'select':  tone(880, 'sine', 0.15, 0.2); tone(1108, 'sine', 0.15, 0.14, 0.08); break;
+    case 'grow':    tone(550, 'sine', 0.2, 0.1); break;
+    case 'victory': chord([523, 659, 784, 1047], 'sine', 2, 0.12); break;
+    case 'defeat':  tone(200, 'sawtooth', 2.5, 0.2); tone(177, 'sawtooth', 3, 0.14, 0.6); break;
+  }
+}
+
+// ── Wave / Mutation Data ────────────────────────────────────
+const WAVES = [
+  {
+    name: 'PENICILLIN',
+    drug: 'Beta-Lactam Antibiotic — Class I',
+    type: 'bl',
+    base: 0.36,
+    color: '#f5d020',
+    flavor: 'The world\'s first antibiotic. It attacks peptidoglycan synthesis in your cell wall, causing structural collapse and lysis.',
+  },
+  {
+    name: 'TETRACYCLINE',
+    drug: 'Broad-Spectrum Antibiotic — Class II',
+    type: 'tc',
+    base: 0.43,
+    color: '#ff8c42',
+    flavor: 'Floods your cytoplasm and locks onto the 30S ribosomal subunit. Protein synthesis halts. Cellular machinery falls silent.',
+  },
+  {
+    name: 'CIPROFLOXACIN',
+    drug: 'Fluoroquinolone — Class III',
+    type: 'fq',
+    base: 0.50,
+    color: '#00d4ff',
+    flavor: 'Targets DNA gyrase and topoisomerase IV. The very helix of your existence unravels. Your blueprint becomes your destruction.',
+  },
+  {
+    name: 'VANCOMYCIN',
+    drug: 'Glycopeptide — Class IV',
+    type: 'gp',
+    base: 0.56,
+    color: '#c77dff',
+    flavor: 'Called the "antibiotic of last resort." It binds D-Ala-D-Ala peptidoglycan precursors — bypassing beta-lactam pathways entirely.',
+  },
+  {
+    name: 'COMBINATION THERAPY',
+    drug: 'Dual Protocol: Beta-Lactam + Fluoroquinolone',
+    type: 'combo1',
+    base: 0.62,
+    color: '#ff6b6b',
+    flavor: 'Simultaneous assault on your cell wall and your DNA. They have learned from your adaptations. They are no longer patient.',
+  },
+  {
+    name: 'COCKTAIL PROTOCOL',
+    drug: 'Triple-Agent Combination — Experimental',
+    type: 'combo2',
+    base: 0.70,
+    color: '#ff3a3a',
+    flavor: 'Desperation drives invention. Three mechanisms, saturating concentrations. The researchers have sacrificed elegance for annihilation.',
+  },
+  {
+    name: 'LAST RESORT',
+    drug: 'Classified Compound — Emergency Authorization',
+    type: 'all',
+    base: 0.80,
+    color: '#ffffff',
+    flavor: 'They have released everything. Maximum concentration. Full spectrum. This is their final, desperate answer. Survive this — and you are something new.',
+  },
+];
+
+const ALL_MUTATIONS = [
+  {
+    id: 'blactamase',
+    icon: '⊗',
+    name: 'BETA-LACTAMASE',
+    desc: 'Produce enzymes that hydrolyze the beta-lactam ring before it binds penicillin-binding proteins.',
+    effect: '+60% Beta-Lactam resistance',
+    color: '#f5d020',
+    apply: (r, s) => { r.bl = cap(r.bl + 0.60); },
+  },
+  {
+    id: 'efflux',
+    icon: '⇅',
+    name: 'EFFLUX PUMPS',
+    desc: 'Overexpress membrane transporters that expel antibiotics before they reach intracellular targets.',
+    effect: '+25% ALL resistances',
+    color: '#7af0ff',
+    apply: (r, s) => { r.bl = cap(r.bl + 0.25); r.tc = cap(r.tc + 0.25); r.fq = cap(r.fq + 0.25); r.gp = cap(r.gp + 0.25); r.gn = cap(r.gn + 0.25); },
+  },
+  {
+    id: 'ribosome',
+    icon: '◎',
+    name: 'RIBOSOMAL MUTATION',
+    desc: 'Alter 30S/50S ribosomal subunits so tetracycline-class drugs can no longer bind effectively.',
+    effect: '+65% Tetracycline resistance',
+    color: '#ff8c42',
+    apply: (r, s) => { r.tc = cap(r.tc + 0.65); },
+  },
+  {
+    id: 'gyrase',
+    icon: '⟳',
+    name: 'DNA GYRASE MUTATION',
+    desc: 'Point mutations in gyrA and parC alter the binding site of fluoroquinolones, rendering them inactive.',
+    effect: '+70% Fluoroquinolone resistance',
+    color: '#00d4ff',
+    apply: (r, s) => { r.fq = cap(r.fq + 0.70); },
+  },
+  {
+    id: 'dala',
+    icon: '⬡',
+    name: 'D-ALA-D-LAC TERMINUS',
+    desc: 'Rewrite the peptidoglycan precursor terminus. Vancomycin cannot bind the new molecular structure.',
+    effect: '+70% Glycopeptide resistance',
+    color: '#c77dff',
+    apply: (r, s) => { r.gp = cap(r.gp + 0.70); },
+  },
+  {
+    id: 'biofilm',
+    icon: '▦',
+    name: 'BIOFILM MATRIX',
+    desc: 'Secrete an extracellular polymer matrix. Embedded cells are shielded from antibiotic penetration.',
+    effect: '−30% damage from all attacks',
+    color: '#39ff14',
+    apply: (r, s) => { s.biofilm = true; },
+  },
+  {
+    id: 'spore',
+    icon: '●',
+    name: 'ENDOSPORE FORMATION',
+    desc: 'A dormant cellular state impervious to environmental stress. A fraction of cells withdraw, waiting.',
+    effect: '10% of cells survive all attacks',
+    color: '#b0b0b0',
+    apply: (r, s) => { s.spore = true; },
+  },
+  {
+    id: 'hgt',
+    icon: '⇄',
+    name: 'HORIZONTAL GENE TRANSFER',
+    desc: 'Share resistance genes colony-wide via conjugation and transformation, amplifying all existing adaptations.',
+    effect: 'All current resistances +15%',
+    color: '#ffff00',
+    apply: (r, s) => { r.bl = cap(r.bl + 0.15); r.tc = cap(r.tc + 0.15); r.fq = cap(r.fq + 0.15); r.gp = cap(r.gp + 0.15); r.gn = cap(r.gn + 0.15); },
+  },
+  {
+    id: 'thickwall',
+    icon: '◻',
+    name: 'REINFORCED CELL WALL',
+    desc: 'Thicken peptidoglycan and modify surface charge. Antibiotics face structural and electrostatic barriers.',
+    effect: '+20% general, +30% Beta-Lactam resistance',
+    color: '#90ee90',
+    apply: (r, s) => { r.gn = cap(r.gn + 0.20); r.bl = cap(r.bl + 0.30); },
+  },
+  {
+    id: 'persister',
+    icon: '⚖',
+    name: 'TOXIN-ANTITOXIN SYSTEM',
+    desc: 'Activate persister cell programming. Metabolically inactive cells cannot be killed by any antibiotic.',
+    effect: '15% of cells immune to everything',
+    color: '#ff69b4',
+    apply: (r, s) => { s.persister = true; },
+  },
+  {
+    id: 'catalase',
+    icon: '✦',
+    name: 'CATALASE OVEREXPRESSION',
+    desc: 'Neutralize reactive oxygen species generated by antibiotic stress. Protect DNA and membrane integrity.',
+    effect: '+35% general resistance',
+    color: '#ffd700',
+    apply: (r, s) => { r.gn = cap(r.gn + 0.35); },
+  },
+];
+
+function cap(v) { return Math.min(0.95, Math.max(0, v)); }
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+// ── Game State ───────────────────────────────────────────────
+const INIT_POP = 1000;
+const NUM_WAVES = WAVES.length; // 7
+
+let G = {};  // game state object
+
+function initState() {
+  G = {
+    phase: 'title',  // title | growing | pre_attack | attacking | evolving | victory | defeat
+    pop: INIT_POP,
+    maxPop: INIT_POP,
+    wave: 0,  // 0-indexed current wave (which wave we're on or about to face)
+    mutations: [],
+    acquired: new Set(),
+    r: { bl: 0, tc: 0, fq: 0, gp: 0, gn: 0 },
+    biofilm: false,
+    spore: false,
+    persister: false,
+    survRate: 1,
+    // phase timers
+    timer: 0,
+    // attack animation
+    atk: null,
+    atk_startPop: 0,
+    atk_killTarget: 0,
+  };
+}
+initState();
+
+// ── Particles ────────────────────────────────────────────────
+const MAX_P = 280;
+let pts = [];
+
+function dishCenter() {
+  return { cx: cvs.width / 2, cy: cvs.height / 2, r: Math.min(cvs.width, cvs.height) * 0.38 };
+}
+
+function spawnPt() {
+  const { cx, cy, r } = dishCenter();
+  const a = Math.random() * Math.PI * 2;
+  const d = Math.sqrt(Math.random()) * r * 0.97;
+  return {
+    x: cx + Math.cos(a) * d,
+    y: cy + Math.sin(a) * d,
+    vx: (Math.random() - 0.5) * 0.25,
+    vy: (Math.random() - 0.5) * 0.25,
+    sz: 1.8 + Math.random() * 2.2,
+    alpha: 0.65 + Math.random() * 0.35,
+    phase: Math.random() * Math.PI * 2,
+    dying: false,
+    dAlpha: 1,
+    dSz: 0,
+    flashRed: 0,
+  };
+}
+
+function initPts(n) {
+  pts = [];
+  for (let i = 0; i < n; i++) pts.push(spawnPt());
+}
+
+function syncPts() {
+  if (G.phase === 'title') return;
+  const target = Math.round((G.pop / G.maxPop) * MAX_P);
+  const live = pts.filter(p => !p.dying).length;
+  const diff = target - live;
+  if (diff > 0) {
+    for (let i = 0; i < Math.min(diff, 8); i++) pts.push(spawnPt());
+  } else if (diff < -2) {
+    let k = 0;
+    for (const p of pts) {
+      if (!p.dying && k < -diff) { p.dying = true; p.flashRed = 1; k++; }
+    }
+  }
+}
+
+function updatePts(dt) {
+  const { cx, cy, r } = dishCenter();
+  for (const p of pts) {
+    if (p.dying) {
+      p.dAlpha -= dt * 0.0028;
+      p.dSz += dt * 0.004;
+      continue;
+    }
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vx += (Math.random() - 0.5) * 0.04;
+    p.vy += (Math.random() - 0.5) * 0.04;
+    const spd = Math.hypot(p.vx, p.vy);
+    if (spd > 0.45) { p.vx = (p.vx / spd) * 0.45; p.vy = (p.vy / spd) * 0.45; }
+    const dx = p.x - cx, dy = p.y - cy;
+    const d = Math.hypot(dx, dy);
+    if (d > r) { p.vx -= (dx / d) * 0.18; p.vy -= (dy / d) * 0.18; }
+    p.phase += dt * 0.0018;
+    if (p.flashRed > 0) p.flashRed -= dt * 0.005;
+  }
+  pts = pts.filter(p => !p.dying || p.dAlpha > 0);
+}
+
+// ── Drawing ──────────────────────────────────────────────────
+function drawBg() {
+  const { cx, cy, r } = dishCenter();
+  ctx.fillStyle = '#020608';
+  ctx.fillRect(0, 0, cvs.width, cvs.height);
+
+  // Petri dish glow
+  const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, r * 1.1);
+  grad.addColorStop(0, 'rgba(4, 22, 13, 0.98)');
+  grad.addColorStop(0.65, 'rgba(3, 13, 8, 0.97)');
+  grad.addColorStop(1, 'rgba(2, 6, 8, 0)');
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r * 1.1, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Grid
+  ctx.strokeStyle = 'rgba(57,255,20,0.035)';
+  ctx.lineWidth = 1;
+  const step = 38;
+  for (let x = 0; x < cvs.width; x += step) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, cvs.height); ctx.stroke();
+  }
+  for (let y = 0; y < cvs.height; y += step) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(cvs.width, y); ctx.stroke();
+  }
+
+  // Dish ring
+  ctx.strokeStyle = 'rgba(57,255,20,0.10)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r * 0.985, 0, Math.PI * 2);
+  ctx.stroke();
+}
+
+function drawPts(now) {
+  for (const p of pts) {
+    if (p.dying) {
+      const a = clamp(p.dAlpha, 0, 1);
+      const s = p.sz + p.dSz;
+      // Red death glow
+      const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, s * 5);
+      g.addColorStop(0, `rgba(255,40,40,${a * 0.5})`);
+      g.addColorStop(1, 'rgba(255,40,40,0)');
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(p.x, p.y, s * 5, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = a;
+      ctx.fillStyle = '#ff3a3a';
+      ctx.beginPath(); ctx.arc(p.x, p.y, s, 0, Math.PI * 2); ctx.fill();
+    } else {
+      const pulse = 0.84 + 0.16 * Math.sin(p.phase + now * 0.0018);
+      const fr = clamp(p.flashRed, 0, 1);
+      const col = fr > 0 ? `rgba(255,${Math.round(255*(1-fr)*0.9)},${Math.round(255*(1-fr)*0.08)},1)` : '#39ff14';
+      const a = p.alpha * pulse;
+      // Outer glow
+      const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.sz * 5);
+      g.addColorStop(0, fr > 0 ? `rgba(255,80,20,${a * 0.18})` : `rgba(57,255,20,${a * 0.18})`);
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.sz * 5, 0, Math.PI * 2); ctx.fill();
+      // Core
+      ctx.globalAlpha = a;
+      ctx.fillStyle = col;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.sz * pulse, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+  ctx.globalAlpha = 1;
+}
+
+function drawAtkWave() {
+  if (!G.atk) return;
+  const { progress, color } = G.atk;
+  const w = cvs.width, h = cvs.height;
+  const x = progress * (w + 220) - 110;
+  const bw = 130;
+  const grad = ctx.createLinearGradient(x - bw, 0, x + bw * 0.5, 0);
+  grad.addColorStop(0, 'rgba(0,0,0,0)');
+  grad.addColorStop(0.35, hexRgba(color, 0.04));
+  grad.addColorStop(0.72, hexRgba(color, 0.22));
+  grad.addColorStop(1, hexRgba(color, 0.04));
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, w, h);
+
+  ctx.save();
+  ctx.shadowBlur = 18;
+  ctx.shadowColor = color;
+  ctx.strokeStyle = hexRgba(color, 0.85);
+  ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+  ctx.restore();
+}
+
+function hexRgba(hex, a) {
+  const r = parseInt(hex.slice(1,3), 16) || 255;
+  const g = parseInt(hex.slice(3,5), 16) || 255;
+  const b = parseInt(hex.slice(5,7), 16) || 255;
+  return `rgba(${r},${g},${b},${a})`;
+}
+
+// ── Game Logic ───────────────────────────────────────────────
+const GROW_DUR = 1800;    // ms for growing phase
+const PRE_ATK_DUR = 2200; // ms for showing wave announcement
+const ATK_DUR = 3200;     // ms for attack wave sweep
+
+function calcDamage(wave) {
+  const r = G.r;
+  let resist = 0;
+  switch (wave.type) {
+    case 'bl':     resist = r.bl; break;
+    case 'tc':     resist = r.tc; break;
+    case 'fq':     resist = r.fq; break;
+    case 'gp':     resist = r.gp; break;
+    case 'combo1': resist = (r.bl + r.fq) * 0.5; break;
+    case 'combo2': resist = (r.bl + r.tc + r.fq) / 3; break;
+    case 'all':    resist = (r.bl + r.tc + r.fq + r.gp) / 4; break;
+  }
+  resist += r.gn;
+  resist = clamp(resist, 0, 0.92);
+
+  let dmg = wave.base * (1 - resist);
+  if (G.biofilm) dmg *= 0.70;
+
+  // Spore: 10% of cells survive regardless
+  // Persister: 15% of cells survive regardless
+  // These reduce effective damage
+  if (G.spore)     dmg *= (1 - 0.10);
+  if (G.persister) dmg *= (1 - 0.15);
+
+  return clamp(dmg, 0, 0.98);
+}
+
+function setPhase(phase) {
+  G.phase = phase;
+  G.timer = 0;
+}
+
+function beginGrowing() {
+  setPhase('growing');
+  updatePhaseBanner('COLONY GROWING…');
+  sfx('grow');
+}
+
+function beginPreAttack() {
+  setPhase('pre_attack');
+  const wv = WAVES[G.wave];
+  // Show wave announcement
+  const el = document.getElementById('wave-announce');
+  const nameEl = document.getElementById('wave-name-el');
+  const subEl  = document.getElementById('wave-sub-el');
+  nameEl.textContent = wv.name;
+  nameEl.style.color = wv.color;
+  subEl.textContent  = `${wv.drug} — WAVE ${G.wave + 1} OF ${NUM_WAVES}`;
+  el.classList.add('show');
+  updatePhaseBanner(`INCOMING: ${wv.name} — WAVE ${G.wave + 1}`);
+  sfx('attack');
+}
+
+function beginAttack() {
+  setPhase('attacking');
+  document.getElementById('wave-announce').classList.remove('show');
+  const wv = WAVES[G.wave];
+  const dmg = calcDamage(wv);
+  G.atk = { progress: 0, color: wv.color };
+  G.atk_startPop   = G.pop;
+  G.atk_killTarget = G.pop * dmg;
+  updatePhaseBanner(`ANTIBIOTIC SWEEP — ${wv.name}`);
+}
+
+function beginEvolving() {
+  setPhase('evolving');
+  sfx('evolve');
+  const wv = WAVES[G.wave];
+  G.survRate = G.pop / G.maxPop;
+
+  document.getElementById('evo-surviving').textContent =
+    `WAVE ${G.wave + 1} SURVIVED — ${Math.round(G.survRate * 100)}% COLONY REMAINS`;
+  document.getElementById('evo-flavor').textContent = wv.flavor;
+
+  // Pick 3 random un-acquired mutations
+  const available = ALL_MUTATIONS.filter(m => !G.acquired.has(m.id));
+  const picks = shuffle(available).slice(0, Math.min(3, available.length));
+
+  const row = document.getElementById('cards-row');
+  row.innerHTML = '';
+  picks.forEach(m => {
+    const card = document.createElement('div');
+    card.className = 'mcard';
+    card.innerHTML = `
+      <div class="mcard-bar" style="background:${m.color};box-shadow:0 0 8px ${m.color}40"></div>
+      <span class="mcard-icon">${m.icon}</span>
+      <div class="mcard-name" style="color:${m.color}">${m.name}</div>
+      <div class="mcard-desc">${m.desc}</div>
+      <div class="mcard-effect">${m.effect}</div>
+    `;
+    card.addEventListener('click', () => selectMutation(m));
+    row.appendChild(card);
+  });
+
+  document.getElementById('evo-screen').classList.remove('hidden');
+  updatePhaseBanner('MUTATION EVENT — CHOOSE AN ADAPTATION');
+}
+
+function selectMutation(m) {
+  sfx('select');
+  m.apply(G.r, G);
+  G.mutations.push(m);
+  G.acquired.add(m.id);
+  document.getElementById('evo-screen').classList.add('hidden');
+  updateMutationTags();
+  updateResistBadges();
+
+  G.wave++;
+  if (G.wave >= NUM_WAVES) {
+    endGame(true);
+  } else {
+    beginGrowing();
+  }
+}
+
+function endGame(victory) {
+  if (victory) {
+    sfx('victory');
+    G.phase = 'victory';
+    const genes = G.mutations.map(m => `<span class="end-gene-tag" style="color:${m.color};border-color:${m.color}60">${m.name}</span>`).join('');
+    document.getElementById('victory-body').innerHTML = `
+      <p>Against seven waves of antibiotics, your colony has endured.</p>
+      <p>Through selection and mutation you forged resistances that defy modern medicine.</p>
+      <p>Your genome carries the marks of every assault — not as wounds, but as armour.</p>
+      <div class="end-genes" style="margin-top:20px;"><strong style="color:var(--text-dim);font-size:0.75em;letter-spacing:0.12em;">ACQUIRED ADAPTATIONS</strong><br><br>${genes || '<span style="color:var(--text-dim)">None</span>'}</div>
+      <p style="margin-top:18px;color:var(--text-dim);font-size:0.82em;">Final population: ${Math.round(G.pop).toLocaleString()} of ${G.maxPop.toLocaleString()}</p>
+    `;
+    document.getElementById('victory-screen').classList.remove('hidden');
+  } else {
+    sfx('defeat');
+    G.phase = 'defeat';
+    document.getElementById('defeat-body').innerHTML = `
+      <p>The antibiotics found no resistance sufficient to overcome.</p>
+      <p>Your colony has been eliminated. The lineage ends here.</p>
+      <p style="margin-top:18px;color:#ff6060;font-size:0.85em;"><strong>SURVIVED:</strong> ${G.wave} of ${NUM_WAVES} waves</p>
+      <p style="color:var(--text-dim);font-size:0.82em;">Every extinction is a lesson evolution cannot hear.</p>
+    `;
+    document.getElementById('defeat-screen').classList.remove('hidden');
+  }
+}
+
+function resetGame() {
+  ['evo-screen','victory-screen','defeat-screen'].forEach(id => {
+    document.getElementById(id).classList.add('hidden');
+  });
+  document.getElementById('wave-announce').classList.remove('show');
+  initState();
+  initPts(MAX_P);
+  updateMutationTags();
+  updateResistBadges();
+  document.getElementById('title-screen').classList.remove('hidden');
+  G.phase = 'title';
+}
+
+// ── UI Helpers ───────────────────────────────────────────────
+function updatePhaseBanner(txt) {
+  document.getElementById('phase-text').textContent = txt;
+}
+
+function updateMutationTags() {
+  document.getElementById('mutation-tags').innerHTML =
+    G.mutations.map(m => `<span class="mtag" style="color:${m.color};border-color:${m.color}55">${m.name}</span>`).join('');
+}
+
+function updateResistBadges() {
+  const map = [
+    ['rb-bl', G.r.bl > 0.05],
+    ['rb-tc', G.r.tc > 0.05],
+    ['rb-fq', G.r.fq > 0.05],
+    ['rb-gp', G.r.gp > 0.05],
+    ['rb-gn', G.r.gn > 0.05],
+    ['rb-bf', G.biofilm],
+    ['rb-sp', G.spore],
+    ['rb-pe', G.persister],
+  ];
+  map.forEach(([id, active]) => {
+    document.getElementById(id).classList.toggle('active', !!active);
+  });
+}
+
+function updateHUD() {
+  document.getElementById('st-pop').textContent = Math.max(0, Math.round(G.pop)).toLocaleString();
+  document.getElementById('st-wave').textContent = G.wave > 0 ? `${G.wave}/${NUM_WAVES}` : '—';
+  document.getElementById('st-surv').textContent = G.wave > 0 ? `${Math.round(G.survRate * 100)}%` : '—';
+  const pct = G.pop / G.maxPop;
+  document.getElementById('pop-bar').style.width = (pct * 100) + '%';
+  const bar = document.getElementById('pop-bar');
+  bar.style.background = pct > 0.60 ? '#39ff14' : pct > 0.30 ? '#ffcc00' : '#ff3a3a';
+}
+
+// ── Game Loop ────────────────────────────────────────────────
+let lastTs = 0;
+let now = 0;
+
+function loop(ts) {
+  const dt = Math.min(ts - lastTs, 48);
+  lastTs = ts;
+  now = ts;
+
+  resize(); // cheap noop if already right size (we track manually elsewhere)
+
+  // ── Phase logic ──
+  if (G.phase !== 'title' && G.phase !== 'evolving' && G.phase !== 'victory' && G.phase !== 'defeat') {
+    G.timer += dt;
+
+    if (G.phase === 'growing') {
+      // Replenish population
+      const t = clamp(G.timer / GROW_DUR, 0, 1);
+      G.pop = G.maxPop; // instant visual fill handled by syncPts
+      if (G.timer >= GROW_DUR) beginPreAttack();
+    }
+
+    if (G.phase === 'pre_attack') {
+      if (G.timer >= PRE_ATK_DUR) beginAttack();
+    }
+
+    if (G.phase === 'attacking') {
+      const t = clamp(G.timer / ATK_DUR, 0, 1);
+      G.atk.progress = t;
+      G.pop = G.atk_startPop - G.atk_killTarget * t;
+
+      if (G.timer >= ATK_DUR) {
+        G.atk = null;
+        G.pop = Math.max(1, Math.round(G.pop));
+        G.survRate = G.pop / G.maxPop;
+        if (G.pop < 8) {
+          endGame(false);
+        } else {
+          beginEvolving();
+        }
+      }
+    }
+
+    updatePts(dt);
+    syncPts();
+  }
+
+  // ── Draw ──
+  ctx.clearRect(0, 0, cvs.width, cvs.height);
+  drawBg();
+  if (G.phase !== 'title') {
+    drawPts(now);
+    drawAtkWave();
+  }
+
+  updateHUD();
+  requestAnimationFrame(loop);
+}
+
+// ── Utility ──────────────────────────────────────────────────
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// ── Event Wiring ─────────────────────────────────────────────
+document.getElementById('btn-start').addEventListener('click', () => {
+  ensureAudio();
+  sfx('start');
+  document.getElementById('title-screen').classList.add('hidden');
+  initPts(MAX_P);
+  G.phase = 'growing';
+  G.timer = GROW_DUR; // skip growing animation on first wave, go straight to attack pre-announce
+  beginPreAttack();
+  updatePhaseBanner(`INCOMING: ${WAVES[0].name} — WAVE 1`);
+});
+
+document.getElementById('btn-victory-restart').addEventListener('click', resetGame);
+document.getElementById('btn-defeat-restart').addEventListener('click', resetGame);
+
+// ── Launch ───────────────────────────────────────────────────
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
