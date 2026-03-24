@@ -8,6 +8,7 @@ import PatientInsights from './pages/PatientInsights';
 import BiographyWelcome from './pages/BiographyWelcome';
 import BiographyInterview from './pages/BiographyInterview';
 import BiographyDraft from './pages/BiographyDraft';
+import MedicationPriceComparison from './pages/MedicationPriceComparison';
 
 function RootRedirect() {
   const { user } = useAuth();
@@ -53,6 +54,9 @@ export default function App() {
           } />
           <Route path="/patient/insights" element={
             <RequireAuth role="patient"><PatientInsights /></RequireAuth>
+          } />
+          <Route path="/patient/medications" element={
+            <RequireAuth role="patient"><MedicationPriceComparison /></RequireAuth>
           } />
 
           {/* Biography routes — no auth required */}

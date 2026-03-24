@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { initials } from '../utils';
 import {
   LayoutDashboard, Users, BarChart2, LogOut, Menu, X, Sprout,
-  HeartPulse, ChevronRight
+  HeartPulse, ChevronRight, Pill
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -27,6 +27,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const patientNav: NavItem[] = [
     { to: '/patient', label: 'My Dashboard', icon: <LayoutDashboard size={18} /> },
     { to: '/patient/insights', label: 'Insights', icon: <BarChart2 size={18} /> },
+    { to: '/patient/medications', label: 'Medication Prices', icon: <Pill size={18} /> },
   ];
 
   const nav = user?.role === 'provider' ? providerNav : patientNav;
