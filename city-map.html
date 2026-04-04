@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>City Discovery Map</title>
+
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Tailwind (Play CDN) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    html, body { height: 100%; margin: 0; font-family: system-ui, -apple-system, sans-serif; }
+    #map { width: 100%; height: 100%; }
+
+    /* Custom marker */
+    .pin {
+      width: 28px; height: 28px;
+      border-radius: 50% 50% 50% 0;
+      border: 3px solid white;
+      box-shadow: 0 2px 8px rgba(0,0,0,.4);
+      transform: rotate(-45deg);
+    }
+
+    /* Card scrollbar */
+    #sidebar::-webkit-scrollbar { width: 4px; }
+    #sidebar::-webkit-scrollbar-track { background: transparent; }
+    #sidebar::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 99px; }
+
+    /* Mobile bottom sheet */
+    @media (max-width: 639px) {
+      #layout { flex-direction: column; }
+      #sidebar-wrap {
+        position: fixed; bottom: 0; left: 0; right: 0; z-index: 1000;
+        height: 44px; transition: height .3s ease;
+        background: white; border-radius: 16px 16px 0 0;
+        box-shadow: 0 -4px 24px rgba(0,0,0,.12);
+        overflow: hidden;
+      }
+      #sidebar-wrap.open { height: 60vh; }
+      #sidebar { max-height: calc(60vh - 44px); overflow-y: auto; }
+      #drag-handle {
+        display: flex; align-items: center; justify-content: center;
+        height: 44px; cursor: pointer; flex-shrink: 0;
+      }
+      #map-wrap { flex: 1; padding-bottom: 44px; }
+    }
+    @media (min-width: 640px) {
+      #drag-handle { display: none; }
+      #sidebar-wrap { height: auto !important; }
+    }
+
+    .place-card.active { border-color: #6366f1; background: #eef2ff; }
+    .leaflet-popup-content { margin: 12px 14px; }
+    .leaflet-popup-content-wrapper { border-radius: 12px; }
+  </style>
+</head>
+<body class="bg-gray-100">
+
+<!-- ── HEADER ── -->
+<header class="bg-white border-b border-gray-200 shadow-sm flex-shrink-0 relative z-[999]">
+  <div class="max-w-6xl mx-auto px-3 py-2.5 flex flex-wrap gap-2 items-center">
+
+    <!-- Brand -->
+    <div class="flex items-center gap-2 flex-shrink-0">
+      <div class="bg-indigo-600 rounded-lg p-1.5">
+        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+      </div>
+      <span class="font-bold text-gray-900 text-sm leading-tight">City Discovery</span>
+    </div>
+
+    <!-- Search -->
+    <form id="search-form" class="flex gap-2 flex-1 min-w-[180px]">
+      <div class="relative flex-1">
+        <svg class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z"/>
+        </svg>
+        <input id="city-input" type="text" placeholder="Search a city… NYC, Austin, Paris"
+          class="w-full pl-8 pr-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+      </div>
+      <button type="submit"
+        class="px-3 py-1.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors">
+        Search
+      </button>
+    </form>
+
+    <!-- Day pills -->
+    <div class="flex gap-1 flex-shrink-0">
+      <button class="day-btn active px-2.5 py-1.5 rounded-lg text-xs font-medium bg-indigo-600 text-white" data-day="today">Today</button>
+      <button class="day-btn px-2.5 py-1.5 rounded-lg text-xs font-medium bg-gray-100 text-gray-600 hover:bg-gray-200" data-day="weekend">Weekend</button>
+      <button class="day-btn px-2.5 py-1.5 rounded-lg text-xs font-medium bg-gray-100 text-gray-600 hover:bg-gray-200" data-day="week">This Week</button>
+    </div>
+  </div>
+
+  <!-- Type filter pills -->
+  <div class="max-w-6xl mx-auto px-3 pb-2 flex gap-1.5 flex-wrap">
+    <button class="type-btn active flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border bg-indigo-100 text-indigo-700 border-transparent" data-type="all">
+      📍 All <span class="count ml-0.5 bg-white/60 px-1 rounded-full"></span>
+    </button>
+    <button class="type-btn flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border bg-white text-gray-600 border-gray-200 hover:border-gray-300" data-type="restaurant">
+      🍽 Food &amp; Drink <span class="count ml-0.5 bg-gray-100 px-1 rounded-full"></span>
+    </button>
+    <button class="type-btn flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border bg-white text-gray-600 border-gray-200 hover:border-gray-300" data-type="event">
+      🎟 Events <span class="count ml-0.5 bg-gray-100 px-1 rounded-full"></span>
+    </button>
+    <button class="type-btn flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border bg-white text-gray-600 border-gray-200 hover:border-gray-300" data-type="activity">
+      ⚡ Activities <span class="count ml-0.5 bg-gray-100 px-1 rounded-full"></span>
+    </button>
+    <button class="type-btn flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border bg-white text-gray-600 border-gray-200 hover:border-gray-300" data-type="bar">
+      🍺 Bars <span class="count ml-0.5 bg-gray-100 px-1 rounded-full"></span>
+    </button>
+  </div>
+</header>
+
+<!-- ── BODY ── -->
+<div id="layout" class="flex" style="height: calc(100vh - 90px)">
+
+  <!-- Sidebar (desktop) -->
+  <div id="sidebar-wrap" class="w-80 xl:w-96 bg-white border-r border-gray-200 flex flex-col flex-shrink-0">
+    <!-- Mobile drag handle -->
+    <div id="drag-handle" onclick="toggleSheet()">
+      <div class="w-10 h-1 bg-gray-300 rounded-full"></div>
+    </div>
+    <!-- Sidebar header -->
+    <div class="px-3 py-2 border-b border-gray-100 flex-shrink-0" id="sidebar-header">
+      <p class="text-sm text-gray-500">Search a city to discover places</p>
+    </div>
+    <!-- Cards -->
+    <div id="sidebar" class="flex-1 overflow-y-auto p-2.5 space-y-2"></div>
+  </div>
+
+  <!-- Map -->
+  <div id="map-wrap" class="flex-1 relative">
+    <!-- Empty state overlay -->
+    <div id="empty-overlay"
+      class="absolute inset-0 z-[500] bg-black/10 flex items-center justify-center pointer-events-none">
+      <div class="bg-white/90 backdrop-blur rounded-2xl px-8 py-6 text-center shadow-lg max-w-xs">
+        <div class="text-4xl mb-3">🗺️</div>
+        <p class="font-semibold text-gray-800">Search a city to get started</p>
+        <p class="text-xs text-gray-500 mt-1">Discover trending restaurants, events, bars &amp; activities</p>
+      </div>
+    </div>
+    <div id="map"></div>
+  </div>
+</div>
+
+<script>
+// ────────────────────────────────────────────
+// DATA
+// ────────────────────────────────────────────
+const CITIES = {
+  'new york':    {lat:40.7128, lng:-74.0060, display:'New York City'},
+  'nyc':         {lat:40.7128, lng:-74.0060, display:'New York City'},
+  'los angeles': {lat:34.0522, lng:-118.2437,display:'Los Angeles'},
+  'la':          {lat:34.0522, lng:-118.2437,display:'Los Angeles'},
+  'chicago':     {lat:41.8781, lng:-87.6298, display:'Chicago'},
+  'miami':       {lat:25.7617, lng:-80.1918, display:'Miami'},
+  'san francisco':{lat:37.7749,lng:-122.4194,display:'San Francisco'},
+  'sf':          {lat:37.7749, lng:-122.4194,display:'San Francisco'},
+  'austin':      {lat:30.2672, lng:-97.7431, display:'Austin'},
+  'nashville':   {lat:36.1627, lng:-86.7816, display:'Nashville'},
+  'seattle':     {lat:47.6062, lng:-122.3321,display:'Seattle'},
+  'boston':      {lat:42.3601, lng:-71.0589, display:'Boston'},
+  'denver':      {lat:39.7392, lng:-104.9903,display:'Denver'},
+  'portland':    {lat:45.5051, lng:-122.6750,display:'Portland'},
+  'new orleans': {lat:29.9511, lng:-90.0715, display:'New Orleans'},
+  'atlanta':     {lat:33.7490, lng:-84.3880, display:'Atlanta'},
+  'dallas':      {lat:32.7767, lng:-96.7970, display:'Dallas'},
+  'las vegas':   {lat:36.1699, lng:-115.1398,display:'Las Vegas'},
+  'london':      {lat:51.5074, lng:-0.1278,  display:'London'},
+  'paris':       {lat:48.8566, lng:2.3522,   display:'Paris'},
+  'tokyo':       {lat:35.6762, lng:139.6503, display:'Tokyo'},
+  'barcelona':   {lat:41.3851, lng:2.1734,   display:'Barcelona'},
+  'berlin':      {lat:52.5200, lng:13.4050,  display:'Berlin'},
+  'sydney':      {lat:-33.8688,lng:151.2093, display:'Sydney'},
+  'toronto':     {lat:43.6532, lng:-79.3832, display:'Toronto'},
+};
+
+const TYPE_META = {
+  restaurant: {color:'#f97316', emoji:'🍽'},
+  event:      {color:'#a855f7', emoji:'🎟'},
+  activity:   {color:'#22c55e', emoji:'⚡'},
+  bar:        {color:'#f59e0b', emoji:'🍺'},
+};
+
+function jitter(v, a=0.018){ return v + (Math.random()-.5)*a*2; }
+
+function makePlaces(city, display) {
+  const n = new Date();
+  const hAgo = h => new Date(n-h*3600000).toISOString();
+  return [
+    {type:'restaurant', name:`${display} Kitchen`,        lat:jitter(city.lat), lng:jitter(city.lng),       desc:`Just had the most incredible tasting menu at ${display} Kitchen tonight! Every dish was a work of art. The truffle pasta alone was worth the trip. Highly recommend! 🍽️`,       author:'@foodie_adventures', likes:342, time:hAgo(2)},
+    {type:'restaurant', name:'The Corner Café',            lat:jitter(city.lat), lng:jitter(city.lng),       desc:`The Corner Café in ${display} is an absolute gem ☕ Best flat white in the city + avocado toast that will change your life. Lines out the door but worth every minute.`,          author:'@sarahdrinks',       likes:891, time:hAgo(4)},
+    {type:'restaurant', name:'Rooftop Brasserie',          lat:jitter(city.lat,.015), lng:jitter(city.lng,.015), desc:`Rooftop Brasserie never misses 🥂 Amazing dinner with views of all of ${display}. Oysters and cocktails were *chef's kiss*. Perfect for a date night!`,                        author:'@alexeats',          likes:456, time:hAgo(8)},
+    {type:'restaurant', name:'The Spice Garden',           lat:jitter(city.lat,.012), lng:jitter(city.lng,.01),  desc:`THE best curry I've ever had, and I've had a lot 🌶️ The Spice Garden in ${display} is incredible. The lamb rogan josh is life-changing. Small spot, book ahead!`,              author:'@spicejourney',      likes:234, time:hAgo(6)},
+    {type:'bar',        name:'The Neon Lounge',            lat:jitter(city.lat), lng:jitter(city.lng),       desc:`The Neon Lounge is THE spot in ${display} right now 🍸 Insane cocktail menu, great vibes. DJ set was fire last night. Packed but the bartenders are so fast!`,                author:'@marcus_nights',     likes:678, time:hAgo(12)},
+    {type:'bar',        name:'Craft Brewery Co.',          lat:jitter(city.lat,.012), lng:jitter(city.lng,.012), desc:`Shoutout to Craft Brewery Co. in ${display} 🍺 Just tried their new seasonal IPA and it slaps. Great outdoor seating, dog-friendly, snacks pair perfectly. Must-visit!`,        author:'@beerandbeyond',     likes:234, time:hAgo(6)},
+    {type:'bar',        name:'Sky Bar',                    lat:jitter(city.lat,.009), lng:jitter(city.lng,.011), desc:`Sky Bar in ${display} has the best rooftop views in the city 🌆 Went for sunset and stayed till midnight. Cocktails are pricey but worth it for the atmosphere.`,              author:'@rooftoplife',       likes:512, time:hAgo(10)},
+    {type:'event',      name:`${display} Jazz Festival`,  lat:jitter(city.lat,.01),  lng:jitter(city.lng,.01),  desc:`The ${display} Jazz Festival is running this weekend and it is MAGICAL 🎷 Free admission, live music all day, food vendors from local restaurants. Bring a blanket!`,          author:'@cityevents',        likes:1240,time:hAgo(2)},
+    {type:'event',      name:'Gallery 21',                 lat:jitter(city.lat,.008), lng:jitter(city.lng,.018), desc:`Gallery 21 just opened a new exhibition! Local artists, mixed media installations, gorgeous outdoor sculpture garden. Opening reception was 🔥 Don't sleep on this!`,          author:'@artscene_daily',    likes:389, time:hAgo(5)},
+    {type:'event',      name:'The Velvet Room',            lat:jitter(city.lat,.014), lng:jitter(city.lng,.009), desc:`Just got back from the pop-up concert at The Velvet Room in ${display} 🎸 Incredible indie band, intimate 200-person venue. These are the nights you remember!`,              author:'@livemusic_fan',     likes:512, time:hAgo(9)},
+    {type:'event',      name:'Food & Wine Market',         lat:jitter(city.lat,.006), lng:jitter(city.lng,.014), desc:`The Food & Wine Market at the waterfront in ${display} this weekend is 🙌 40+ vendors, live cooking demos, natural wine, the best bites. Go Saturday morning!`,              author:'@marketfinds',       likes:876, time:hAgo(3)},
+    {type:'activity',   name:`${display} Botanical Garden`,lat:jitter(city.lat,.018),lng:jitter(city.lng,.022),  desc:`Spent the morning at the ${display} Botanical Garden and it is absolutely stunning right now 🌸 Everything is in bloom. The Japanese garden section is so peaceful. Go!`,     author:'@naturewalks',       likes:723, time:hAgo(3)},
+    {type:'activity',   name:'The History Museum',         lat:jitter(city.lat,.01),  lng:jitter(city.lng,.013), desc:`The History Museum in ${display} just opened a new exhibit on local street art history — it's incredible! Interactive, immersive, only $12. Perfect rainy day activity 🎨`,     author:'@weekendexplorer',   likes:445, time:hAgo(7)},
+    {type:'activity',   name:'Waterfront Park',            lat:jitter(city.lat,.022), lng:jitter(city.lng,.016), desc:`Waterfront Park in ${display} is so underrated ☀️ Kayak rentals, food trucks, live music on weekends. Brought the whole family and everyone had a blast. Free parking too!`,  author:'@familydaysout',     likes:892, time:hAgo(11)},
+    {type:'activity',   name:'Night Market',               lat:jitter(city.lat,.007), lng:jitter(city.lng,.011), desc:`Night Market is back in ${display} every Friday! 40+ vendors, street food from all over the world, live DJ, and the most amazing vibe. Free entry, runs till midnight 🌙`,   author:'@streeteatsblog',    likes:1567,time:hAgo(1)},
+  ].map((p,i) => ({...p, id:`p${i}`}));
+}
+
+// ────────────────────────────────────────────
+// STATE
+// ────────────────────────────────────────────
+let allPlaces = [];
+let typeFilter = 'all';
+let activeId   = null;
+let sheetOpen  = false;
+const markers  = {};
+
+// ────────────────────────────────────────────
+// MAP
+// ────────────────────────────────────────────
+const map = L.map('map', {zoomControl:true}).setView([39.5,-98.35], 4);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+  maxZoom: 19,
+}).addTo(map);
+
+function makeIcon(type) {
+  const color = TYPE_META[type]?.color ?? '#6366f1';
+  return L.divIcon({
+    className: '',
+    html: `<div class="pin" style="background:${color}"></div>`,
+    iconSize: [28,28], iconAnchor:[14,28], popupAnchor:[0,-32],
+  });
+}
+
+function timeAgo(iso) {
+  const m = Math.floor((Date.now() - new Date(iso)) / 60000);
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m/60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h/24)}d ago`;
+}
+
+// ────────────────────────────────────────────
+// RENDER
+// ────────────────────────────────────────────
+function getFiltered() {
+  return typeFilter === 'all' ? allPlaces : allPlaces.filter(p => p.type === typeFilter);
+}
+
+function renderCards() {
+  const sidebar = document.getElementById('sidebar');
+  const filtered = getFiltered();
+  sidebar.innerHTML = '';
+
+  if (!filtered.length) {
+    sidebar.innerHTML = `<div class="flex flex-col items-center py-12 text-gray-400 text-sm text-center px-4">
+      <div class="text-3xl mb-3">📍</div>
+      <p>No places for this filter.</p>
+      <p class="text-xs mt-1">Try a different type or day range.</p>
+    </div>`;
+    return;
+  }
+
+  filtered.forEach(p => {
+    const meta = TYPE_META[p.type] ?? {emoji:'📍'};
+    const div = document.createElement('div');
+    div.className = `place-card border rounded-xl p-3 cursor-pointer transition-all duration-150 bg-white ${activeId===p.id?'active':'border-gray-200 hover:border-indigo-300'}`;
+    div.innerHTML = `
+      <div class="flex items-start gap-2.5 mb-2">
+        <span class="text-lg leading-none mt-0.5">${meta.emoji}</span>
+        <div class="flex-1 min-w-0">
+          <p class="font-semibold text-gray-900 text-sm truncate">${p.name}</p>
+          <p class="text-xs text-gray-500 capitalize">${p.type}</p>
+        </div>
+      </div>
+      <p class="text-xs text-gray-600 leading-relaxed line-clamp-3">${p.desc}</p>
+      <div class="flex items-center justify-between mt-2 text-xs text-gray-500">
+        <span class="font-medium text-gray-700">${p.author}</span>
+        <div class="flex items-center gap-3">
+          <span>❤️ ${p.likes.toLocaleString()}</span>
+          <span>${timeAgo(p.time)}</span>
+        </div>
+      </div>`;
+    div.addEventListener('click', () => selectPlace(p.id));
+    sidebar.appendChild(div);
+  });
+}
+
+function renderMarkers() {
+  // Clear old
+  Object.values(markers).forEach(m => m.remove());
+  Object.keys(markers).forEach(k => delete markers[k]);
+
+  getFiltered().forEach(p => {
+    const marker = L.marker([p.lat, p.lng], {icon: makeIcon(p.type)})
+      .addTo(map)
+      .bindPopup(`
+        <div style="min-width:200px">
+          <div style="font-weight:600;font-size:14px;margin-bottom:6px">${TYPE_META[p.type]?.emoji??'📍'} ${p.name}</div>
+          <div style="font-size:12px;color:#4b5563;line-height:1.5;margin-bottom:8px">${p.desc.slice(0,160)}…</div>
+          <div style="font-size:11px;color:#6b7280;display:flex;justify-content:space-between">
+            <span>${p.author}</span>
+            <span>❤️ ${p.likes}</span>
+          </div>
+        </div>`);
+    marker.on('click', () => selectPlace(p.id));
+    markers[p.id] = marker;
+  });
+}
+
+function updateCounts() {
+  document.querySelectorAll('.type-btn').forEach(btn => {
+    const t = btn.dataset.type;
+    const n = t === 'all' ? allPlaces.length : allPlaces.filter(p=>p.type===t).length;
+    btn.querySelector('.count').textContent = allPlaces.length ? n : '';
+  });
+}
+
+function selectPlace(id) {
+  activeId = id;
+  renderCards();
+
+  const place = allPlaces.find(p => p.id === id);
+  if (!place) return;
+
+  map.setView([place.lat, place.lng], 15, {animate:true});
+  markers[id]?.openPopup();
+
+  // Scroll card into view
+  const cards = document.querySelectorAll('.place-card');
+  const filtered = getFiltered();
+  const idx = filtered.findIndex(p => p.id === id);
+  if (cards[idx]) cards[idx].scrollIntoView({behavior:'smooth', block:'nearest'});
+
+  // Open sheet on mobile
+  if (window.innerWidth < 640) openSheet();
+}
+
+// ────────────────────────────────────────────
+// SEARCH
+// ────────────────────────────────────────────
+async function searchCity(query) {
+  const key = query.toLowerCase().trim();
+  let cityInfo = CITIES[key];
+
+  // Fallback: geocode via Nominatim (free, no key needed)
+  if (!cityInfo) {
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`,
+        {headers:{'User-Agent':'CityDiscoveryApp/1.0'}}
+      );
+      const data = await res.json();
+      if (data[0]) {
+        cityInfo = {lat:+data[0].lat, lng:+data[0].lon, display:data[0].display_name.split(',')[0]};
+      }
+    } catch(e) {
+      console.warn('Nominatim error', e);
+    }
+  }
+
+  if (!cityInfo) {
+    alert(`Couldn't find "${query}". Try a more specific city name.`);
+    return;
+  }
+
+  allPlaces = makePlaces(cityInfo, cityInfo.display || query);
+  activeId  = null;
+
+  // Update header
+  document.getElementById('sidebar-header').innerHTML = `
+    <p class="font-semibold text-gray-900 text-sm">${cityInfo.display || query}</p>
+    <p class="text-xs text-gray-500">${allPlaces.length} places found · Demo data</p>`;
+
+  // Hide overlay
+  document.getElementById('empty-overlay').style.display = 'none';
+
+  updateCounts();
+  renderCards();
+  renderMarkers();
+  map.flyTo([cityInfo.lat, cityInfo.lng], 13, {duration:1.2});
+}
+
+// ────────────────────────────────────────────
+// MOBILE SHEET
+// ────────────────────────────────────────────
+function toggleSheet() { sheetOpen ? closeSheet() : openSheet(); }
+function openSheet()  { sheetOpen=true;  document.getElementById('sidebar-wrap').classList.add('open'); }
+function closeSheet() { sheetOpen=false; document.getElementById('sidebar-wrap').classList.remove('open'); }
+
+// Update handle label
+const handle = document.getElementById('drag-handle');
+if (handle) {
+  const label = document.createElement('span');
+  label.className = 'text-xs text-gray-500 ml-2';
+  label.id = 'handle-label';
+  handle.appendChild(label);
+}
+
+// ────────────────────────────────────────────
+// EVENT LISTENERS
+// ────────────────────────────────────────────
+document.getElementById('search-form').addEventListener('submit', e => {
+  e.preventDefault();
+  const v = document.getElementById('city-input').value.trim();
+  if (v) searchCity(v);
+});
+
+document.querySelectorAll('.type-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    typeFilter = btn.dataset.type;
+
+    document.querySelectorAll('.type-btn').forEach(b => {
+      b.classList.remove('bg-indigo-100','text-indigo-700','bg-orange-100','text-orange-700',
+        'bg-purple-100','text-purple-700','bg-green-100','text-green-700',
+        'bg-amber-100','text-amber-700','border-transparent');
+      b.classList.add('bg-white','text-gray-600','border-gray-200');
+      b.querySelector('.count').className = 'count ml-0.5 bg-gray-100 px-1 rounded-full';
+    });
+
+    const colorMap = {
+      all:'bg-indigo-100 text-indigo-700',
+      restaurant:'bg-orange-100 text-orange-700',
+      event:'bg-purple-100 text-purple-700',
+      activity:'bg-green-100 text-green-700',
+      bar:'bg-amber-100 text-amber-700',
+    };
+    btn.classList.remove('bg-white','text-gray-600','border-gray-200');
+    btn.classList.add(...colorMap[typeFilter].split(' '),'border-transparent');
+    btn.querySelector('.count').className = 'count ml-0.5 bg-white/60 px-1 rounded-full';
+
+    activeId = null;
+    renderCards();
+    renderMarkers();
+  });
+});
+
+document.querySelectorAll('.day-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.day-btn').forEach(b => {
+      b.classList.remove('bg-indigo-600','text-white');
+      b.classList.add('bg-gray-100','text-gray-600');
+    });
+    btn.classList.add('bg-indigo-600','text-white');
+    btn.classList.remove('bg-gray-100','text-gray-600');
+    // Day filter is cosmetic only in demo — re-render with fresh jitter
+    if (allPlaces.length) {
+      const cityName = document.querySelector('#sidebar-header p')?.textContent || '';
+      if (cityName) searchCity(cityName);
+    }
+  });
+});
+</script>
+</body>
+</html>
