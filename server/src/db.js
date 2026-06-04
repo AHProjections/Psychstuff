@@ -12,6 +12,48 @@ db.pragma('foreign_keys = ON');
 
 function setup() {
   db.exec(`
+    CREATE TABLE IF NOT EXISTS family_users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT UNIQUE NOT NULL,
+      display_name TEXT NOT NULL,
+      password_hash TEXT NOT NULL,
+      phone TEXT,
+      avatar_color TEXT DEFAULT '#6366F1',
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS family_sessions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL REFERENCES family_users(id),
+      token TEXT UNIQUE NOT NULL,
+      expires_at TEXT NOT NULL,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS todo_categories (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      color TEXT DEFAULT '#6366F1',
+      icon TEXT DEFAULT '📋',
+      created_by INTEGER REFERENCES family_users(id),
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS todos (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      description TEXT,
+      category_id INTEGER REFERENCES todo_categories(id),
+      priority TEXT DEFAULT 'medium' CHECK(priority IN ('low','medium','high','urgent')),
+      deadline TEXT,
+      completed INTEGER DEFAULT 0,
+      completed_by INTEGER REFERENCES family_users(id),
+      completed_at TEXT,
+      created_by INTEGER REFERENCES family_users(id),
+      created_at TEXT DEFAULT (datetime('now')),
+      updated_at TEXT DEFAULT (datetime('now'))
+    );
+
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       email TEXT UNIQUE NOT NULL,
@@ -300,6 +342,27 @@ function seed() {
   console.log('Database seeded successfully.');
 }
 
+function seedFamily() {
+  const count = db.prepare('SELECT COUNT(*) as c FROM family_users').get().c;
+  if (count > 0) return;
+
+  const bcrypt = require('bcryptjs');
+  const hash = bcrypt.hashSync('family2024', 10);
+
+  db.prepare('INSERT INTO family_users (username, display_name, password_hash, avatar_color) VALUES (?,?,?,?)')
+    .run('you', 'You', hash, '#6366F1');
+  db.prepare('INSERT INTO family_users (username, display_name, password_hash, avatar_color) VALUES (?,?,?,?)')
+    .run('spouse', 'Spouse', hash, '#EC4899');
+
+  const insertCat = db.prepare('INSERT INTO todo_categories (name, color, icon) VALUES (?,?,?)');
+  insertCat.run('Groceries', '#22C55E', '🛒');
+  insertCat.run('Home', '#F97316', '🏠');
+  insertCat.run('Kids', '#8B5CF6', '👨‍👩‍👧');
+  insertCat.run('Work', '#3B82F6', '💼');
+  insertCat.run('Errands', '#F59E0B', '🚗');
+  insertCat.run('Health', '#EF4444', '❤️');
+}
+
 function clamp(v, min, max) {
   return Math.max(min, Math.min(max, v));
 }
@@ -312,5 +375,6 @@ function offsetDate(days) {
 
 setup();
 seed();
+seedFamily();
 
 module.exports = db;

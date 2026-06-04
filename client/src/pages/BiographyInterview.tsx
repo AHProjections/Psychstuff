@@ -12,7 +12,7 @@ import clsx from 'clsx';
 const hasSpeechRecognition = 'SpeechRecognition' in window || 'webkitSpeechRecognition' in window;
 const hasSpeechSynthesis = 'speechSynthesis' in window;
 
-function getSpeechRecognition(): SpeechRecognition | null {
+function getSpeechRecognition(): any | null {
   if ('SpeechRecognition' in window) {
     return new (window as any).SpeechRecognition();
   }
@@ -47,7 +47,7 @@ export default function BiographyInterview() {
   const [showTopicNav, setShowTopicNav] = useState(false);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const recognitionRef = useRef<any | null>(null);
   const interimRef = useRef('');
 
   // Load session data
@@ -147,7 +147,7 @@ export default function BiographyInterview() {
 
     interimRef.current = answer;
 
-    recognition.onresult = (event) => {
+    recognition.onresult = (event: any) => {
       let interim = '';
       let final = '';
       for (let i = event.resultIndex; i < event.results.length; i++) {
@@ -167,7 +167,7 @@ export default function BiographyInterview() {
       }
     };
 
-    recognition.onerror = (event) => {
+    recognition.onerror = (event: any) => {
       console.error('Speech recognition error:', event.error);
       if (event.error !== 'no-speech') {
         setIsListening(false);

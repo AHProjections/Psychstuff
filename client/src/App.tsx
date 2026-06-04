@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { FamilyAuthProvider, useFamilyAuth } from './context/FamilyAuthContext';
 import Login from './pages/Login';
 import ProviderDashboard from './pages/ProviderDashboard';
 import PatientDetail from './pages/PatientDetail';
@@ -8,6 +9,8 @@ import PatientInsights from './pages/PatientInsights';
 import BiographyWelcome from './pages/BiographyWelcome';
 import BiographyInterview from './pages/BiographyInterview';
 import BiographyDraft from './pages/BiographyDraft';
+import FamilyLogin from './pages/FamilyLogin';
+import FamilyHome from './pages/FamilyHome';
 
 function RootRedirect() {
   const { user } = useAuth();
@@ -60,9 +63,29 @@ export default function App() {
           <Route path="/biography/interview/:id" element={<BiographyInterview />} />
           <Route path="/biography/draft/:id" element={<BiographyDraft />} />
 
+          {/* Family todo app */}
+          <Route path="/family/*" element={
+            <FamilyAuthProvider>
+              <FamilyRoutes />
+            </FamilyAuthProvider>
+          } />
+
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
   );
+}
+
+function FamilyRoutes() {
+  const { user, loading } = useFamilyAuth();
+
+  if (loading) return (
+    <div className="flex items-center justify-center h-screen">
+      <div className="w-8 h-8 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+
+  if (!user) return <FamilyLogin />;
+  return <FamilyHome />;
 }
