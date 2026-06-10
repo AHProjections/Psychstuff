@@ -1,122 +1,68 @@
-# Apple Watch Haptic Reminders
+# Haptic Time — Apple Watch Haptic Reminders
 
-A standalone watchOS app that fires haptic taps at configurable intervals while running in the background.
+A standalone Apple Watch app that taps your wrist at regular intervals (default: **every 15 minutes, on the hour**) or at custom times you pick, so you can keep track of time haptically — even with your watch in silent mode or a Focus/Do Not Disturb.
+
+## How it works (and why it's reliable)
+
+The app schedules **repeating local notifications** with the **Time Sensitive** interruption level:
+
+- **Silent mode**: watchOS always delivers notification *haptics* in silent mode — silent mode only mutes sounds. You'll feel every tap.
+- **Focus / Do Not Disturb**: Time Sensitive notifications are allowed to break through Focus by default (you can confirm under iPhone → Settings → Focus → your Focus → Apps → "Time Sensitive").
+- **No background app needed**: repeating notification triggers are delivered by the system indefinitely. Nothing runs in the background, nothing gets killed by watchOS, and battery impact is essentially zero. Set it once and forget it.
+
+> Earlier versions of this app used `WKExtendedRuntimeSession`, which watchOS suspends after a few minutes in the background. The notification approach is the one that actually works all day.
 
 ## Features
 
-- **Intervals**: Every 15 min, every 30 min, every hour, 15 min after the hour, 30 min after the hour
-- **Haptic types**: Notification, Click, Direction Up, Success, Retry
-- **True background execution** via `WKExtendedRuntimeSession` — no screen needed
-- **Auto-renewal**: session renews itself before it expires, so it runs indefinitely
-- **Countdown timer** showing time until the next tap
-- **Tap counter** to track how many reminders have fired
+- **Interval mode** — every 5, 10, 15, 20, 30, or 60 minutes, anchored to the clock ("on the hour"), with an optional offset (e.g. every 15 min starting at :05 → :05, :20, :35, :50)
+- **Custom times mode** — add any list of specific times of day
+- **Quiet hours** — suppress reminders overnight (e.g. 10 PM → 8 AM), supports ranges that wrap midnight
+- **Test haptic** button to feel the tap
+- Shows the **next reminder time** and how many alarms are scheduled
+- All settings persist and reschedule automatically when changed
 
-## How It Works
+## Installing on your watch
 
-| Interval option | Fires at… |
-|---|---|
-| Every 15 min | :00, :15, :30, :45 |
-| Every 30 min | :00, :30 |
-| Every hour | :00 |
-| 15 min after hour | :15 (every hour) |
-| 30 min after hour | :30 (every hour) |
+You need: a Mac with **Xcode 15 or newer**, your **iPhone** (paired to the watch), and your **Apple Watch**. A free Apple ID works — no paid developer account required.
 
-The app uses **`WKExtendedRuntimeSession`** with the `self-care` background mode, which Apple allows for mindfulness/wellness apps. This keeps the session alive even when the watch screen is off.
+1. **Open the project**: double-click `HapticReminders.xcodeproj`.
+2. **Set your signing team**: click the blue project icon in the sidebar → *HapticReminders* target → **Signing & Capabilities** tab → set **Team** to your Apple ID (add it via Xcode → Settings → Accounts if it's not there). If the bundle ID collides, change `com.ajhughes.HapticReminders` to anything unique.
+3. **Connect your iPhone** to the Mac with a cable (watch unlocked, on your wrist, near the phone).
+4. **Pick the destination**: in the toolbar device menu, choose your Apple Watch (listed under your iPhone, "via iPhone").
+5. **Run**: press **⌘R**. First install takes a couple of minutes while Xcode prepares the watch.
+6. **Trust the developer** if prompted: on the watch (or iPhone → Watch app), Settings → General → Device Management → trust your Apple ID.
+7. **Open the app on the watch** and tap **Allow** when it asks for notification permission (this includes the Time Sensitive permission).
 
----
+Default schedule (every 15 min on the hour, all day) is active immediately after permission is granted.
 
-## Xcode Setup (Step-by-Step)
+### Recommended watch settings
 
-### Requirements
-- Xcode 15+
-- watchOS 8+ deployment target
-- A real Apple Watch (simulator cannot test haptics or extended runtime sessions)
-- Apple Developer account (free tier is fine for personal device testing)
+- **Stronger taps**: Watch → Settings → Sounds & Haptics → Haptic Alerts → **Prominent**.
+- **Silent mode on** is fine — haptics still fire; you just won't hear the chime.
+- If reminders don't break through a Focus: iPhone → Settings → Focus → (your Focus) → make sure **Time Sensitive notifications** are allowed, or add **Haptic Time** to allowed apps.
 
-### 1. Create the Xcode Project
+## Limits worth knowing
 
-1. Open Xcode → **File → New → Project**
-2. Choose **watchOS → App**
-3. Fill in:
-   - **Product Name**: `HapticReminders`
-   - **Team**: your Apple ID / developer account
-   - **Organization Identifier**: e.g. `com.yourname`
-   - **Bundle Identifier**: `com.yourname.HapticReminders`
-   - **Interface**: SwiftUI
-   - **Life Cycle**: SwiftUI App
-   - Uncheck "Include Notification Scene" (not needed)
-4. Click **Next**, save somewhere
+- watchOS allows **64 pending alarms per app**. Without quiet hours, interval mode only needs a handful of hourly-repeating triggers (e.g. 4 for a 15-minute interval), so the limit never matters. With quiet hours enabled, each active hour needs its own daily triggers — a 5-minute interval with 16 active hours exceeds 64, and the app will warn you and keep the earliest 64.
+- Apps signed with a **free** Apple ID expire after **7 days** and need to be re-run from Xcode. With a paid developer account they last a year (or distribute via TestFlight).
+- Notification haptics use the system's standard notification tap pattern — per-notification custom haptic patterns aren't possible on watchOS.
 
-### 2. Replace the Generated Source Files
-
-Delete the placeholder files Xcode generated and add the files from this folder:
+## Project layout
 
 ```
-HapticReminders Watch App/
-├── HapticReminderApp.swift   ← replace App.swift Xcode made
-├── ContentView.swift          ← replace ContentView.swift
-└── HapticScheduler.swift     ← add this new file
+AppleWatchHapticReminders/
+├── HapticReminders.xcodeproj      ← open this
+└── HapticReminders/
+    ├── HapticRemindersApp.swift   ← app entry, notification delegate (foreground haptic)
+    ├── ContentView.swift          ← settings UI (interval, custom times, quiet hours)
+    ├── ReminderModel.swift        ← settings persistence + notification scheduling
+    ├── HapticReminders.entitlements  ← Time Sensitive notifications capability
+    └── Assets.xcassets            ← app icon, accent color
 ```
-
-You can drag-and-drop them into the Xcode project navigator (into the **HapticReminders Watch App** group).
-
-### 3. Configure Info.plist
-
-Open the **Info.plist** for the Watch App target (not the iOS companion if one exists) and add:
-
-| Key | Type | Value |
-|-----|------|-------|
-| `WKBackgroundModes` | Array | |
-| → Item 0 | String | `self-care` |
-
-Or you can use the XML version in `Info.plist` included here — merge its contents into the target's plist.
-
-Alternatively, in the **Signing & Capabilities** tab for the Watch target:
-1. Click **+ Capability**
-2. Add **Background Modes**
-3. Check **Self Care**
-
-### 4. Set Deployment Target
-
-In the Watch App target's **General** tab:
-- **Deployment Target**: watchOS 8.0 or later
-
-### 5. Build & Run
-
-1. Connect your iPhone (with paired Apple Watch)
-2. Select your **Apple Watch** as the run destination in Xcode
-3. Press **⌘R** to build and install
-4. Open the app on your watch, pick an interval, tap **Start**
-
----
-
-## Architecture Notes
-
-### `HapticScheduler.swift`
-- `ObservableObject` that owns a `WKExtendedRuntimeSession`
-- `nextFireDate(from:)` calculates the next aligned clock boundary for the chosen interval
-- A `Timer` fires at that exact moment, plays the haptic, then schedules the next one
-- `extendedRuntimeSessionWillExpire` is called ~5 s before the session's time limit; it immediately starts a fresh session so coverage is seamless
-
-### `ContentView.swift`
-- Two states: **Setup** (pickers + Start button) and **Running** (countdown + Stop button)
-- Uses `.timer` style on `Text` for a live countdown to the next tap
-
-### Background mode
-`WKExtendedRuntimeSession` with `self-care` background mode runs the CPU at reduced power even when the screen is off. This is the same mechanism used by mindfulness/breathing apps.
-
----
 
 ## Troubleshooting
 
-**Haptics don't fire in the background**
-→ Make sure `WKBackgroundModes` contains `self-care` in Info.plist, and the capability is added in Signing & Capabilities.
-
-**Session immediately invalidates**
-→ This happens on Simulator. Test on a real device.
-
-**App crashes on launch**
-→ Check that `HapticReminderApp.swift` uses `@main` and the target's "Principal Class" in Info.plist is not set to something else.
-
-**Timer drifts over time**
-→ The scheduler re-aligns to the clock boundary on every fire, so drift does not accumulate.
+- **No taps arriving** → check the app's notifications are allowed: Watch → Settings → Notifications → Haptic Time. Then open the app once (it re-syncs the schedule on every launch).
+- **Signing error about time-sensitive entitlement** → on the target's Signing & Capabilities tab remove the *Time Sensitive Notifications* capability and delete the key from `HapticReminders.entitlements`; the app still works in silent mode, it just won't pierce Focus.
+- **Watch never shows up as a run destination** → keep iPhone unlocked + connected, watch unlocked on wrist; Xcode → Window → Devices and Simulators to check pairing status; first-time watch preparation can take several minutes.
+- **Taps stop after a week** → free-account signing expired; plug in and ⌘R again.

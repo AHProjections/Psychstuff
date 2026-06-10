@@ -5,3 +5,6 @@ server/data/
 client/dist/
 *.db
 .env
+xcuserdata/
+*.xcuserstate
+DerivedData/
